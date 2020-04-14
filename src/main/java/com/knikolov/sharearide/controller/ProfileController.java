@@ -2,6 +2,7 @@ package com.knikolov.sharearide.controller;
 
 import com.knikolov.sharearide.dto.AddressDto;
 import com.knikolov.sharearide.dto.PasswordChange;
+import com.knikolov.sharearide.dto.UserDto;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.service.impl.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +24,20 @@ public class ProfileController {
     }
 
     @RequestMapping(value = "/user", method = RequestMethod.GET)
-    User getUser(Principal principal) {
-        return userService.getUserByUsername(principal.getName());
+    UserDto getUser(Principal principal) {
+        User user =  userService.getUserByUsername(principal.getName());
+        return userService.userToUserDto(user);
     }
 
     @RequestMapping(value = "/user", method = RequestMethod.PATCH, consumes = MediaType.APPLICATION_JSON_VALUE)
-    User updateUser(@RequestBody User user, Principal principal) {
+    UserDto updateUser(@RequestBody User user, Principal principal) {
         validateUser(user);
-        return userService.updateUser(user);
+        if (user.getUsername().equals(principal.getName())) {
+            User userDb = userService.updateUser(user);
+            return userService.userToUserDto(userDb);
+        } else {
+            throw new IllegalArgumentException("Unauthorized request.");
+        }
     }
 
     @RequestMapping(value = "/address", method = RequestMethod.GET)
@@ -39,8 +46,8 @@ public class ProfileController {
     }
 
     @RequestMapping(value = "/address/{addressId}", method = RequestMethod.GET)
-    Address getAddressById(@PathVariable String addressId) {
-        return userService.getAddressById(addressId);
+    Address getAddressById(@PathVariable String addressId, Principal principal) {
+        return userService.getAddressById(addressId, principal.getName());
     }
 
     @RequestMapping(value = "/address", method = RequestMethod.POST)
@@ -62,10 +69,10 @@ public class ProfileController {
         return userService.deleteAddress(addressId, principal.getName());
     }
 
-    //TODO: Replace GET with PATCH
     @RequestMapping(value = "/becomeDriver", method = RequestMethod.GET)
-    User becomeDriver(Principal principal) {
-        return this.userService.becomeDriver(principal.getName());
+    UserDto becomeDriver(Principal principal) {
+        User user = this.userService.becomeDriver(principal.getName());
+        return userService.userToUserDto(user);
     }
 
     @RequestMapping(value = "/cities", method = RequestMethod.GET)
@@ -74,8 +81,9 @@ public class ProfileController {
     }
 
     @RequestMapping(value = "/company", method = RequestMethod.GET)
-    User getCompany(Principal principal) {
-        return this.userService.getCompany(principal.getName());
+    UserDto getCompany(Principal principal) {
+        User user = this.userService.getCompany(principal.getName());
+        return userService.userToUserDto(user);
     }
 
     @RequestMapping(value = "/changePassword", method = RequestMethod.PATCH)
@@ -84,9 +92,10 @@ public class ProfileController {
         return this.userService.changePassword(passwordChange, principal.getName());
     }
 
-    @RequestMapping(value = "/approveRouteStop", method = RequestMethod.PATCH)
-    RouteStop approveRoute(@RequestParam("routeStopId") String routeStopId, Principal principal) {
-        return this.userService.approveRoute(routeStopId, principal.getName());
+    @RequestMapping(value = "/approveOrDeclineRouteStop", method = RequestMethod.PATCH)
+    RouteStop approveRoute(@RequestParam("routeStopId") String routeStopId, @RequestParam("approved") boolean approved,
+                           Principal principal) {
+        return this.userService.approveOrDeclineRoute(routeStopId, principal.getName(), approved);
     }
 
     @RequestMapping(value = "/routeStop/{routeStopId}", method = RequestMethod.GET)
@@ -95,10 +104,9 @@ public class ProfileController {
     }
 
     @RequestMapping(value = "user/{userId}", method = RequestMethod.GET)
-    User getUserById(@PathVariable String userId) {
-        //TODO
-        User u = this.userService.getUserById(userId);
-        return u;
+    UserDto getUserById(@PathVariable String userId) {
+        User user = this.userService.getUserById(userId);
+        return userService.userToUserDto(user);
     }
 
     @RequestMapping(value = "rate", method = RequestMethod.POST)

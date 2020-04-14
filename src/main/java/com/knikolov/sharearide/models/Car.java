@@ -33,6 +33,9 @@ public class Car {
     @Length(max = 30)
     private String color;
 
+    @Column
+    private Boolean deleted;
+
     public Car() {
         this.id = UUID.randomUUID().toString();
     }
@@ -101,5 +104,13 @@ public class Car {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

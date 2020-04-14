@@ -13,7 +13,7 @@ public interface CarService {
 
     Car addNewCar(CarDto car, String name);
 
-    Car deleteCar(String carId);
+    Car deleteCar(String carId, String name);
 
     Car updateCar(CarDto car, String name);
 }

@@ -27,26 +27,24 @@ public class CarController {
     }
 
     @RequestMapping(value = "/car/{carId}", method = RequestMethod.GET)
-    Car getCarById(@PathVariable String carId) {
+    Car getCarById(@PathVariable String carId, Principal principal) {
         return carService.getCarById(carId);
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.DELETE)
-    Car deleteCarById(@RequestParam("carId") String carId) {
-        return carService.deleteCar(carId);
+    Car deleteCarById(@RequestParam("carId") String carId, Principal principal) {
+        return carService.deleteCar(carId, principal.getName());
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.POST)
     Car addNewCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);
-
         return carService.addNewCar(car, principal.getName());
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.PATCH)
     Car updateCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);
-
         return carService.updateCar(car, principal.getName());
     }
 

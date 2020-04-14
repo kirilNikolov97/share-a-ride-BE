@@ -3,6 +3,7 @@ package com.knikolov.sharearide.service;
 import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.Route;
+import com.knikolov.sharearide.models.RouteStop;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,13 +24,13 @@ public interface RouteService {
 
     Route updateFutureRoute(String carId, String addressId, String routeId, LocalDateTime date, Boolean officeDirection, String name);
 
-    Route getRouteById(String routeId, String name);
+    Route getRouteById(String routeId, Boolean validate, String name);
 
     List<Route> getLastRoutes(Integer limit, String name);
 
     Route cancelRoute(String routeId, String name);
 
-    Route saveSeat(String routeId, String addressId, String name);
+    RouteStop saveSeat(String routeId, String addressId, String name);
 
     Iterable<Route> getRoutes(Integer page, SortBy sort, String filter);
 

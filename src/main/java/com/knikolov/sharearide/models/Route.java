@@ -1,13 +1,14 @@
 package com.knikolov.sharearide.models;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-public class Route {
+public class Route implements Serializable {
 
     @Id
     @Column(name = "route_id")
@@ -26,7 +27,7 @@ public class Route {
     @JoinColumn(name = "car_id")
     private Car car;
 
-    @OneToMany(mappedBy = "routeId")
+    @OneToMany(mappedBy = "routeId", fetch = FetchType.EAGER)
     private List<RouteStop> routeStops;
 
     public Route() {

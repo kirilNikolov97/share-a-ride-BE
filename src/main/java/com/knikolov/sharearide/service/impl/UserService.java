@@ -2,8 +2,11 @@ package com.knikolov.sharearide.service.impl;
 
 import com.knikolov.sharearide.dto.AddressDto;
 import com.knikolov.sharearide.dto.PasswordChange;
+import com.knikolov.sharearide.dto.UserDto;
+import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
+import com.knikolov.sharearide.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,6 +14,7 @@ import org.springframework.transaction.TransactionSystemException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -20,16 +24,22 @@ public class UserService {
     private final CityRepository cityRepository;
     private final RouteStopRepository routeStopRepository;
     private final RatingRepository ratingRepository;
+    private final RouteRepository routeRepository;
+    private final EmailService emailService;
 
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, AddressRepository addressRepository, CityRepository cityRepository, RouteStopRepository routeStopRepository, RatingRepository ratingRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, AddressRepository addressRepository, CityRepository cityRepository,
+                       RouteStopRepository routeStopRepository, RatingRepository ratingRepository,
+                       RouteRepository routeRepository, EmailService emailService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.cityRepository = cityRepository;
         this.routeStopRepository = routeStopRepository;
         this.ratingRepository = ratingRepository;
+        this.routeRepository = routeRepository;
+        this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -38,14 +48,30 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        return this.userRepository.save(user);
+        User dbUser = this.userRepository.findByUsername(user.getUsername());
+        user.setPassword(dbUser.getPassword());
+
+        try {
+            return this.userRepository.save(user);
+        } catch (Exception e) {
+            if (e.getMessage().contains("email")) {
+                throw new IllegalArgumentException("Email is already taken.");
+            } else {
+                throw new IllegalArgumentException("Something went wrong. Try again later.");
+            }
+        }
     }
 
     public List<Address> getAddressesByUsername(String username) {
-        return userRepository.findByUsername(username).getAddresses();
+        return userRepository.findByUsername(username).getAddresses().stream().filter( address -> !address.getDeleted()).collect(Collectors.toList());
     }
 
-    public Address getAddressById(String addressId) {
+    public Address getAddressById(String addressId, String username) {
+        User user = this.userRepository.findByUsername(username);
+        if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(addressId))) {
+            throw new IllegalArgumentException("This address can not be found in your profile.");
+        }
+
         return addressRepository.findById(addressId).orElse(null);
     }
 
@@ -62,6 +88,7 @@ public class UserService {
             newAddress.setAdditionalInfo(addressDto.getAdditionalInfo());
             newAddress.setLongitude(addressDto.getLongitude());
             newAddress.setLatitude(addressDto.getLatitude());
+            newAddress.setDeleted(false);
 
             addresses.add(newAddress);
             user.setAddresses(addresses);
@@ -75,6 +102,10 @@ public class UserService {
 
     public Address updateAddress(AddressDto address, String username) {
         Address currentAddress = this.addressRepository.findById(address.getId()).orElse(null);
+        User user = this.userRepository.findByUsername(username);
+        if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(address.getId()))) {
+            throw new IllegalArgumentException("This address can not be found in your profile.");
+        }
 
         if(currentAddress != null) {
             try {
@@ -84,6 +115,7 @@ public class UserService {
                 currentAddress.setAdditionalInfo(address.getAdditionalInfo());
                 currentAddress.setLatitude(address.getLatitude());
                 currentAddress.setLongitude(address.getLongitude());
+                currentAddress.setDeleted(false);
 
                 return this.addressRepository.save(currentAddress);
             } catch (Exception e) {
@@ -99,20 +131,41 @@ public class UserService {
         List<Address> addresses = user.getAddresses();
 
         int toBeDeleted = -1;
-        for(int i = 0; i < addresses.size(); i++) {
+        for (int i = 0; i < addresses.size(); i++) {
             if(addresses.get(i).getId().equals(addressId)) {
                 toBeDeleted = i;
             }
         }
 
-        if(toBeDeleted != -1) {
-            Address deletedAddress = addresses.remove(toBeDeleted);
-            user.setAddresses(addresses);
-            this.userRepository.save(user);
-            return deletedAddress;
+        if (toBeDeleted == -1) {
+            throw new IllegalArgumentException("No such address in your profile");
         }
 
-        return null;
+        Address deletedAddress = addresses.get(toBeDeleted);
+
+        List<Route> futureRoutes = routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now());
+        futureRoutes.addAll(routeRepository.findAllFutureRoutesByUserIdAsPassenger(user, LocalDateTime.now()));
+
+        if (futureRoutes.size() > 0) {
+            for (int i = 0; i <  futureRoutes.size(); i++) {
+                if (futureRoutes.get(i).getRouteStops().stream().filter(rs -> {
+                    if (rs.getAddress().getId().equals(deletedAddress.getId())) {
+                        return true;
+                    }
+                    return false;
+                }).count() > 0) {
+                    throw new IllegalArgumentException("The address is assigned to future route. Change the address for the route and then delete this address");
+                }
+            }
+        }
+
+        deletedAddress.setDeleted(true);
+
+        addresses.get(toBeDeleted).setDeleted(true);
+        user.setAddresses(addresses);
+        this.userRepository.save(user);
+
+        return this.addressRepository.save(deletedAddress);
     }
 
     public User becomeDriver(String name) {
@@ -146,10 +199,19 @@ public class UserService {
         return true;
     }
 
-    public RouteStop approveRoute(String routeStopId, String name) {
+    public RouteStop approveOrDeclineRoute(String routeStopId, String driverUsername, boolean approved) {
         RouteStop routeStop = this.routeStopRepository.getOne(routeStopId);
-        routeStop.setApproved(true);
-        return this.routeStopRepository.save(routeStop);
+        if (!approved) {
+            this.routeStopRepository.delete(routeStop);
+            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUserId().getEmail(), driverUsername, false);
+            return null;
+        } else {
+            routeStop.setApproved(true);
+
+            RouteStop saved = this.routeStopRepository.save(routeStop);
+            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUserId().getEmail(), driverUsername, true);
+            return saved;
+        }
     }
 
     public RouteStop getRouteStopById(String routeStopId) {
@@ -178,5 +240,25 @@ public class UserService {
         newRating.setRate(rating);
 
         return this.ratingRepository.save(newRating);
+    }
+
+    public UserDto userToUserDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setPhone(user.getPhone());
+        dto.setEmail(user.getEmail());
+        dto.setDriver(user.isDriver());
+        dto.setCreated(user.getCreated());
+        dto.setCompanyId(user.getCompanyId());
+        dto.setRatings(user.getRatings());
+        dto.setRoles(user.getRoles());
+        dto.setAddresses(user.getAddresses());
+        dto.setCars(user.getCars());
+        dto.setCompany(user.getCompany());
+
+        return dto;
     }
 }

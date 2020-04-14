@@ -32,6 +32,9 @@ public class Address {
     @Column
     private Double longitude;
 
+    @Column
+    private Boolean deleted;
+
     public Address() {
         this.id = UUID.randomUUID().toString();
     }
@@ -105,5 +108,13 @@ public class Address {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }

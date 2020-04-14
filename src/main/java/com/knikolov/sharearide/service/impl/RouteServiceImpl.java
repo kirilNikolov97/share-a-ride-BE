@@ -6,6 +6,7 @@ import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
 import com.knikolov.sharearide.service.CarService;
+import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -28,10 +29,14 @@ public class RouteServiceImpl implements RouteService {
     private final RouteStopRepository routeStopRepository;
     private final RoutePagingAndSortingRepository routePagingAndSortingRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
 
     @Autowired
-    public RouteServiceImpl(RouteRepository routeRepository, UserService userService, CarService carService, AddressRepository addressRepository, RouteStopRepository routeStopRepository, RoutePagingAndSortingRepository routePagingAndSortingRepository, UserRepository userRepository) {
+    public RouteServiceImpl(RouteRepository routeRepository, UserService userService, CarService carService,
+                            AddressRepository addressRepository, RouteStopRepository routeStopRepository,
+                            RoutePagingAndSortingRepository routePagingAndSortingRepository,
+                            UserRepository userRepository, EmailService emailService) {
         this.routeRepository = routeRepository;
         this.userService = userService;
         this.carService = carService;
@@ -39,6 +44,7 @@ public class RouteServiceImpl implements RouteService {
         this.routeStopRepository = routeStopRepository;
         this.routePagingAndSortingRepository = routePagingAndSortingRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -79,6 +85,20 @@ public class RouteServiceImpl implements RouteService {
         Car car = this.carService.getCarById(carId);
         Address address = this.addressRepository.findById(addressId).orElse(null);
 
+        if (!user.isDriver()) {
+            throw new IllegalArgumentException("Can not add new route. You are not a driver.");
+        }
+
+        List<Route> futureRoutes = this.routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now());
+        for (Route futureRoute : futureRoutes) {
+            if (futureRoute.getOfficeDirection() == officeDirection &&
+                    futureRoute.getDateRoute().getYear() == date.getYear() &&
+                    futureRoute.getDateRoute().getDayOfYear() == date.getDayOfYear()) {
+                throw new IllegalArgumentException("You already have a route for this day and this direction");
+            }
+        }
+
+
         if(car != null && address != null) {
             Route route = new Route();
             route.setCar(car);
@@ -104,9 +124,15 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     public Route updateFutureRoute(String carId, String addressId, String routeId, LocalDateTime date, Boolean officeDirection, String username) {
+        User user = this.userRepository.findByUsername(username);
+        if (!this.routeRepository.getOne(routeId).getCar().getUserId().equals(user.getId())) {
+            throw new IllegalArgumentException("This route was not found in your profile.");
+        }
+
         Car car = this.carService.getCarById(carId);
         Address address = this.addressRepository.findById(addressId).orElse(null);
         Route route = this.routeRepository.findById(routeId).orElse(null);
+
 
         if(car != null && address != null && route != null) {
             route.setCar(car);
@@ -124,7 +150,14 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Route getRouteById(String routeId, String name) {
+    public Route getRouteById(String routeId, Boolean validate, String name) {
+        if (validate) {
+            User user = this.userRepository.findByUsername(name);
+            if (this.routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now()).stream().filter(r -> r.getCar().getUserId().equals(user.getId())).count() == 0) {
+                throw new IllegalArgumentException("Could not find this route in your profile");
+            }
+
+        }
         Route route = this.routeRepository.findById(routeId).orElse(null);
         if(route != null) {
             List<RouteStop> stops = this.routeStopRepository.findAllByRouteId(routeId);
@@ -146,29 +179,66 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Route cancelRoute(String routeId, String name) {
+    public Route cancelRoute(String routeId, String driverName) {
         Route routeToCancel = this.routeRepository.findById(routeId).orElse(null);
-        routeToCancel.setCanceled(true);
-        return this.routeRepository.save(routeToCancel);
+        User driver = this.userRepository.findByUsername(driverName);
+
+        if (routeToCancel != null) {
+            if (!routeToCancel.getCar().getUserId().equals(driver.getId())) {
+                throw new IllegalArgumentException("This route is not present in your profile");
+            }
+
+            routeToCancel.setCanceled(true);
+            Route savedRoute = this.routeRepository.save(routeToCancel);
+
+            this.emailService.sendEmailsForCanceledRoute(routeId, driverName);
+            return savedRoute;
+        } else {
+            throw new IllegalArgumentException("Something went wrong. Try again later");
+        }
     }
 
     @Override
-    public Route saveSeat(String routeId, String addressId, String username) {
-        RouteStop routeStop = new RouteStop();
+    public RouteStop saveSeat(String routeId, String addressId, String username) {
         Address address = this.addressRepository.findById(addressId).orElse(null);
         User user = this.userService.getUserByUsername(username);
+        Route route = this.routeRepository.findById(routeId).orElse(null);
 
-        if(address != null && user != null) {
+        if (address != null && user != null && route != null) {
+            if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(addressId))) {
+                throw new IllegalArgumentException("This address is not assigned to this user");
+            }
+            if (route.getDateRoute().compareTo(LocalDateTime.now()) <= 0) {
+                throw new IllegalArgumentException("This route is already passed. You can not save a seat for this route");
+            }
+            if (route.getCar().getSeats() - route.getRouteStops().size() < 1) {
+                throw new IllegalArgumentException("No free seats in the car.");
+            }
+            if (route.getCanceled()) {
+                throw new IllegalArgumentException("Route is canceled. You can not save a seat for this route");
+            }
+            if (route.getRouteStops().stream().anyMatch(rs -> rs.getPassengerEnum().equals("DRIVER") && rs.getUserId().getId().equals(user.getId()))) {
+                throw new IllegalArgumentException("You are driver. Can not save a seat as a passenger");
+            }
+            if (route.getRouteStops().stream().anyMatch(rs -> rs.getUserId().getId().equals(user.getId()))) {
+                throw new IllegalArgumentException("You already saved a seat for this route.");
+            }
+
+            RouteStop routeStop = new RouteStop();
+
             routeStop.setAddress(address);
             routeStop.setPassengerEnum("PASSENGER");
             routeStop.setRouteId(routeId);
             routeStop.setUserId(user);
             routeStop.setApproved(false);
 
-            this.routeStopRepository.save(routeStop);
-        }
+            RouteStop savedRouteStop = this.routeStopRepository.save(routeStop);
+            this.emailService.sendEmailForSavingASeat(route.getCar().getUserId(), username);
 
-        return this.routeRepository.findById(routeId).orElse(null);    }
+            return savedRouteStop;
+        }
+        throw new IllegalArgumentException("Something went wrong. Try again later");
+    }
 
     @Override
     public Iterable<Route> getRoutes(Integer page, SortBy sort, String filter) {
@@ -199,29 +269,43 @@ public class RouteServiceImpl implements RouteService {
         List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumEqualsOrderByUserId(PassengerEnum.DRIVER.toString());
         List<TopUser> topUsers = new ArrayList<>();
         int cnt = 0;
+        int stops = 0;
 
         for(int i = 0; i < routeStops.size(); i++) {
             if(i == 0) {
-                cnt++;
+                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
+                    cnt++;
+                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i).getRouteId()).size();
+                }
                 continue;
             }
-            if(routeStops.get(i-1).getUserId() == routeStops.get(i).getUserId()) {
-                cnt++;
+            if(routeStops.get(i-1).getUserId().getId()
+                    .equals(routeStops.get(i).getUserId().getId())) {
+                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
+                    cnt++;
+                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i).getRouteId()).size();
+                }
                 if(i == routeStops.size() - 1) {
                     User u = this.userRepository.findById(routeStops.get(i).getUserId().getId()).orElse(null);
-                    TopUser topUser = new TopUser(u, cnt);
+                    TopUser topUser = new TopUser(u, cnt, stops - cnt);
                     topUsers.add(topUser);
                 }
             } else {
                 User u = this.userRepository.findById(routeStops.get(i-1).getUserId().getId()).orElse(null);
-                TopUser topUser = new TopUser(u, cnt);
+                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
+                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i - 1).getRouteId()).size();
+                    cnt++;
+                }
+                TopUser topUser = new TopUser(u, cnt, stops - cnt);
                 topUsers.add(topUser);
-                cnt = 0;
+
                 if(i == routeStops.size() - 1) {
                     User lastUser = this.userRepository.findById(routeStops.get(i).getUserId().getId()).orElse(null);
-                    TopUser lastTopUser = new TopUser(lastUser, cnt);
+                    TopUser lastTopUser = new TopUser(lastUser, cnt, stops - cnt);
                     topUsers.add(lastTopUser);
                 }
+                stops = 0;
+                cnt = 0;
             }
         }
 

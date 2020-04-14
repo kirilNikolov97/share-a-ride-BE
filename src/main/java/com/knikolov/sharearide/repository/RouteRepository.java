@@ -25,4 +25,6 @@ public interface RouteRepository extends JpaRepository<Route, String> {
     @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute > ?1 AND rs.passengerEnum = 'DRIVER' AND rs.userId.id <> ?2 ORDER BY r.id DESC")
     List<Route> findAllByOrderByIdDesc(LocalDateTime now, String userId);
 
+    List<Route> findAllByCarIdAndDateRouteAfterAndCanceledEquals(String car_id, LocalDateTime dateRoute, Boolean canceled);
+
 }

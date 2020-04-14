@@ -3,6 +3,8 @@ package com.knikolov.sharearide.controller;
 import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.Route;
+import com.knikolov.sharearide.models.RouteStop;
+import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +19,12 @@ import java.util.List;
 public class RouteController {
 
     private final RouteService routeService;
+    private final EmailService emailService;
 
     @Autowired
-    public RouteController(RouteService routeService) {
+    public RouteController(RouteService routeService, EmailService emailService) {
         this.routeService = routeService;
+        this.emailService = emailService;
     }
 
     @RequestMapping(value = "/routesAsDriver", method = RequestMethod.GET)
@@ -51,8 +55,8 @@ public class RouteController {
     }
 
     @RequestMapping(value = "/route/{routeId}", method = RequestMethod.GET)
-    Route getRouteById(@PathVariable String routeId, Principal principal) {
-        return this.routeService.getRouteById(routeId, principal.getName());
+    Route getRouteById(@PathVariable String routeId, @RequestParam Boolean validate, Principal principal) {
+        return this.routeService.getRouteById(routeId, validate, principal.getName());
     }
 
     @RequestMapping(value = "/route", method = RequestMethod.POST)
@@ -60,6 +64,7 @@ public class RouteController {
                       @RequestBody LocalDateTime date, Principal principal) {
         validateRoute(carId, addressId, officeDirection, date);
 
+        emailService.sendTestEmail();
         // TODO: check if correct
         date = date.plusHours(2);
         return this.routeService.addNewRoute(carId, addressId, officeDirection, date, principal.getName());
@@ -84,13 +89,12 @@ public class RouteController {
     }
 
     @RequestMapping(value = "/saveSeat/{routeId}", method = RequestMethod.GET)
-    Route saveSeat(@PathVariable String routeId, @RequestParam String addressId, Principal principal) {
+    RouteStop saveSeat(@PathVariable String routeId, @RequestParam String addressId, Principal principal) {
         return this.routeService.saveSeat(routeId, addressId, principal.getName());
     }
 
     @RequestMapping(value = "/route/allRoutes", method = RequestMethod.GET)
     List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy, @RequestParam String filter) {
-        System.out.println(sortBy + "sort \n\n\n\n");
         SortBy sortByEnum;
         if (sortBy.equals("date_desc")) {
             sortByEnum = SortBy.DATE_DESC;

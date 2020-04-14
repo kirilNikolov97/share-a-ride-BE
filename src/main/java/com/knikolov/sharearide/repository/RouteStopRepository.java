@@ -19,4 +19,5 @@ public interface RouteStopRepository extends JpaRepository<RouteStop, String> {
 
     @Query("SELECT DISTINCT rs.routeId from RouteStop rs WHERE rs.passengerEnum=?1 AND rs.userId.id=?2")
     List<String> findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals(String passengerEnum, String userId);
+
 }
