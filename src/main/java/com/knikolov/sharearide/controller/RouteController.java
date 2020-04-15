@@ -66,7 +66,7 @@ public class RouteController {
 
         emailService.sendTestEmail();
         // TODO: check if correct
-        date = date.plusHours(2);
+        date = date.plusHours(3);
         return this.routeService.addNewRoute(carId, addressId, officeDirection, date, principal.getName());
     }
 

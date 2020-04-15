@@ -35,21 +35,6 @@ public class Route implements Serializable {
         this.canceled = Boolean.FALSE;
     }
 
-    public Route(LocalDateTime dateRoute, Boolean canceled, Car car) {
-        this.id = UUID.randomUUID().toString();
-        this.dateRoute = dateRoute;
-        this.canceled = canceled;
-        this.car = car;
-    }
-
-    public Route(LocalDateTime dateRoute, Boolean canceled, Car car, List<RouteStop> routeStops) {
-        this.id = UUID.randomUUID().toString();
-        this.dateRoute = dateRoute;
-        this.canceled = canceled;
-        this.car = car;
-        this.routeStops = routeStops;
-    }
-
     public String getId() {
         return id;
     }

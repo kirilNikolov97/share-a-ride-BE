@@ -38,7 +38,5 @@ public interface RouteService {
 
     List<TopUser> getTop15Riders();
 
-    Boolean checkIfPassengerWasInDriverRoute(String driverId, String passengerId);
-
     Iterable<Route> sortAndFilter(LocalDateTime start, LocalDateTime end, int i, SortBy sortByEnum, Boolean officeDirection);
 }

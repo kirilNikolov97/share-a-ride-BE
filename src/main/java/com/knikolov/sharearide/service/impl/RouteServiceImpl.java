@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RouteServiceImpl implements RouteService {
@@ -50,7 +51,7 @@ public class RouteServiceImpl implements RouteService {
     @Override
     public List<Route> getAllRoutesByUserAsDriver(String username) {
         User user = this.userService.getUserByUsername(username);
-        List<Route> routes = this.routeRepository.findAllByUserIdAsDriver(user, LocalDateTime.now());
+        List<Route> routes = this.routeRepository.findAllPastByUserIdAsDriver(user, LocalDateTime.now());
         System.out.println("\n\n\n\n ROUTES SIZE " + routes.size());
         return routes;
     }
@@ -99,7 +100,7 @@ public class RouteServiceImpl implements RouteService {
         }
 
 
-        if(car != null && address != null) {
+        if (car != null && address != null) {
             Route route = new Route();
             route.setCar(car);
             route.setDateRoute(date);
@@ -134,7 +135,7 @@ public class RouteServiceImpl implements RouteService {
         Route route = this.routeRepository.findById(routeId).orElse(null);
 
 
-        if(car != null && address != null && route != null) {
+        if (car != null && address != null && route != null) {
             route.setCar(car);
             route.setDateRoute(date);
             route.setOfficeDirection(officeDirection);
@@ -159,7 +160,7 @@ public class RouteServiceImpl implements RouteService {
 
         }
         Route route = this.routeRepository.findById(routeId).orElse(null);
-        if(route != null) {
+        if (route != null) {
             List<RouteStop> stops = this.routeStopRepository.findAllByRouteId(routeId);
             route.setRouteStops(stops);
             return route;
@@ -171,7 +172,7 @@ public class RouteServiceImpl implements RouteService {
     public List<Route> getLastRoutes(Integer limit, String name) {
         User user = this.userService.getUserByUsername(name);
         List<Route> routes = this.routeRepository.findAllByOrderByIdDesc(LocalDateTime.now(), user.getId());
-        if(routes.size() <= limit) {
+        if (routes.size() <= limit) {
             return routes;
         } else {
             return routes.subList(0, limit);
@@ -260,53 +261,18 @@ public class RouteServiceImpl implements RouteService {
         } else if (sort == SortBy.DATE_ASC) {
             return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, PageRequest.of(page, 5, Sort.by("dateRoute").ascending()));
         } else {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEquals(start.plusHours(LocalDateTime.now().getHour()), end, false,  PageRequest.of(page, 5));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, PageRequest.of(page, 5));
         }
     }
 
     @Override
     public List<TopUser> getTop15Riders() {
-        List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumEqualsOrderByUserId(PassengerEnum.DRIVER.toString());
         List<TopUser> topUsers = new ArrayList<>();
-        int cnt = 0;
-        int stops = 0;
-
-        for(int i = 0; i < routeStops.size(); i++) {
-            if(i == 0) {
-                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
-                    cnt++;
-                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i).getRouteId()).size();
-                }
-                continue;
-            }
-            if(routeStops.get(i-1).getUserId().getId()
-                    .equals(routeStops.get(i).getUserId().getId())) {
-                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
-                    cnt++;
-                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i).getRouteId()).size();
-                }
-                if(i == routeStops.size() - 1) {
-                    User u = this.userRepository.findById(routeStops.get(i).getUserId().getId()).orElse(null);
-                    TopUser topUser = new TopUser(u, cnt, stops - cnt);
-                    topUsers.add(topUser);
-                }
-            } else {
-                User u = this.userRepository.findById(routeStops.get(i-1).getUserId().getId()).orElse(null);
-                if (!this.routeRepository.findById(routeStops.get(i).getRouteId()).get().getCanceled()) { // if not canceled
-                    stops += this.routeStopRepository.findAllByRouteId(routeStops.get(i - 1).getRouteId()).size();
-                    cnt++;
-                }
-                TopUser topUser = new TopUser(u, cnt, stops - cnt);
-                topUsers.add(topUser);
-
-                if(i == routeStops.size() - 1) {
-                    User lastUser = this.userRepository.findById(routeStops.get(i).getUserId().getId()).orElse(null);
-                    TopUser lastTopUser = new TopUser(lastUser, cnt, stops - cnt);
-                    topUsers.add(lastTopUser);
-                }
-                stops = 0;
-                cnt = 0;
-            }
+        List<User> drivers = this.userRepository.findAll().stream().filter(User::isDriver).collect(Collectors.toList());
+        for (User driver : drivers) {
+            List<Route> userRoutes = this.routeRepository.findAllByUserIdAsDriver(driver);
+            int passengers = getAllPassengersCount(userRoutes);
+            topUsers.add(new TopUser(driver, userRoutes.size(), passengers));
         }
 
         Collections.sort(topUsers);
@@ -314,17 +280,17 @@ public class RouteServiceImpl implements RouteService {
         return topUsers;
     }
 
-    @Override
-    public Boolean checkIfPassengerWasInDriverRoute(String driver, String passenger) {
-        List<String> driverRouteStops = this.routeStopRepository
-                .findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("DRIVER", driver);
+    private int getAllPassengersCount(List<Route> userRoutes) {
+        int passengers = 0;
+        for (Route userRoute : userRoutes) {
+            passengers += getPassengersInRoute(userRoute);
+        }
 
-        List<String> passengerRouteStops = this.routeStopRepository
-                .findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("PASSENGER", passenger);
+        return passengers;
+    }
 
-        int i = 0;
-        //TODO
-        return false;
+    private int getPassengersInRoute(Route route) {
+        return route.getRouteStops().size() - 1;
     }
 
     @Override
@@ -341,7 +307,7 @@ public class RouteServiceImpl implements RouteService {
             return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, officeDirection, PageRequest.of(page, 5, Sort.by("dateRoute").ascending()));
         } else {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEquals(start.plusHours(LocalDateTime.now().getHour()), end, false,  PageRequest.of(page, 5));
+                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, PageRequest.of(page, 5));
             }
             return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, officeDirection, PageRequest.of(page, 5));
         }

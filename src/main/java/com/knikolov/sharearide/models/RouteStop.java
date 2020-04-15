@@ -31,14 +31,6 @@ public class RouteStop {
         this.id = UUID.randomUUID().toString();
     }
 
-    public RouteStop(String routeId, Address addressId, User userId, String passengerEnum) {
-        this.id = UUID.randomUUID().toString();
-        this.routeId = routeId;
-        this.addressId = addressId;
-        this.userId = userId;
-        this.passengerEnum = passengerEnum;
-    }
-
     public String getId() {
         return id;
     }

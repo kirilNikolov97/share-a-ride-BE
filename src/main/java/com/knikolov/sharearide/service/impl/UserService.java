@@ -63,7 +63,7 @@ public class UserService {
     }
 
     public List<Address> getAddressesByUsername(String username) {
-        return userRepository.findByUsername(username).getAddresses().stream().filter( address -> !address.getDeleted()).collect(Collectors.toList());
+        return userRepository.findByUsername(username).getAddresses().stream().filter(address -> !address.getDeleted()).collect(Collectors.toList());
     }
 
     public Address getAddressById(String addressId, String username) {
@@ -107,7 +107,7 @@ public class UserService {
             throw new IllegalArgumentException("This address can not be found in your profile.");
         }
 
-        if(currentAddress != null) {
+        if (currentAddress != null) {
             try {
                 currentAddress.setCity(address.getCity());
                 currentAddress.setDistrict(address.getDistrict());
@@ -132,7 +132,7 @@ public class UserService {
 
         int toBeDeleted = -1;
         for (int i = 0; i < addresses.size(); i++) {
-            if(addresses.get(i).getId().equals(addressId)) {
+            if (addresses.get(i).getId().equals(addressId)) {
                 toBeDeleted = i;
             }
         }
@@ -147,7 +147,7 @@ public class UserService {
         futureRoutes.addAll(routeRepository.findAllFutureRoutesByUserIdAsPassenger(user, LocalDateTime.now()));
 
         if (futureRoutes.size() > 0) {
-            for (int i = 0; i <  futureRoutes.size(); i++) {
+            for (int i = 0; i < futureRoutes.size(); i++) {
                 if (futureRoutes.get(i).getRouteStops().stream().filter(rs -> {
                     if (rs.getAddress().getId().equals(deletedAddress.getId())) {
                         return true;
@@ -230,7 +230,7 @@ public class UserService {
 
         boolean isNoCommonElements = Collections.disjoint(driverRouteIds, passengerRouteIds);
 
-        if(isNoCommonElements) {
+        if (isNoCommonElements) {
             throw new IllegalArgumentException("The driver never drove this passenger!");
         }
 
@@ -260,5 +260,28 @@ public class UserService {
         dto.setCompany(user.getCompany());
 
         return dto;
+    }
+
+    public RouteStop deleteRouteStopById(String routeStopId, String name) {
+        RouteStop rsToDelete = this.routeStopRepository.findById(routeStopId).orElse(null);
+
+        if (rsToDelete != null) {
+            if (!rsToDelete.getUserId().getUsername().equals(name)) {
+                throw new IllegalArgumentException("Could not find this route stop in your profile.");
+            }
+            Route route = this.routeRepository.findById(rsToDelete.getRouteId()).orElse(null);
+            if (route == null) {
+                throw new IllegalArgumentException("Route is not present");
+            }
+            if (route.getDateRoute().compareTo(LocalDateTime.now()) < 0) {
+                throw new IllegalArgumentException("Route already passed. Can not delete route stop");
+            }
+
+            this.routeStopRepository.delete(rsToDelete);
+            this.emailService.sendEmailForDeletedRouteStop(rsToDelete.getUserId().getEmail());
+            return rsToDelete;
+        } else {
+            throw new IllegalArgumentException("Something went wrong. Try again later.");
+        }
     }
 }

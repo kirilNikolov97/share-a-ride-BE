@@ -103,6 +103,11 @@ public class ProfileController {
         return this.userService.getRouteStopById(routeStopId);
     }
 
+    @RequestMapping(value = "/routeStop/{routeStopId}", method = RequestMethod.DELETE)
+    RouteStop deleteRouteStopById(@PathVariable String routeStopId, Principal principal) {
+        return this.userService.deleteRouteStopById(routeStopId, principal.getName());
+    }
+
     @RequestMapping(value = "user/{userId}", method = RequestMethod.GET)
     UserDto getUserById(@PathVariable String userId) {
         User user = this.userService.getUserById(userId);

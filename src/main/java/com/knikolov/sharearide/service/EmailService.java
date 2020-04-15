@@ -86,4 +86,13 @@ public class EmailService {
         }
     }
 
+    public void sendEmailForDeletedRouteStop(String driverEmail) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(driverEmail);
+        message.setSubject("Canceled Route Stop");
+        message.setText("Someone just canceled their route stop in one of your routes!");
+        if (false) {
+            emailSender.send(message);
+        }
+    }
 }
