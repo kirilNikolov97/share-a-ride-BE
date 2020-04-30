@@ -9,15 +9,18 @@ public class JwtResponse {
     private String username;
     private String email;
     private Boolean isDriver;
+    private Boolean isCompany;
     private List<String> roles;
 
-    public JwtResponse(String accessToken, String id, String username, String email, Boolean isDriver, List<String> roles) {
+    public JwtResponse(String accessToken, String id, String username, String email, Boolean isDriver, Boolean isCompany,
+                       List<String> roles) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
         this.isDriver = isDriver;
         this.roles = roles;
+        this.isCompany = isCompany;
     }
 
     public String getAccessToken() {
@@ -70,5 +73,13 @@ public class JwtResponse {
 
     public void setDriver(Boolean driver) {
         isDriver = driver;
+    }
+
+    public Boolean getCompany() {
+        return isCompany;
+    }
+
+    public void setCompany(Boolean company) {
+        isCompany = company;
     }
 }

@@ -28,6 +28,11 @@ public class Rating implements Serializable {
     public Rating() {
     }
 
+    public Rating(RatingId ratingId, Integer rate, LocalDateTime dateRating) {
+        this.ratingId = ratingId;
+        this.rate = rate;
+        this.dateRating = dateRating;
+    }
 
     public RatingId getRatingId() {
         return ratingId;

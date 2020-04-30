@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface RouteStopRepository extends JpaRepository<RouteStop, String> {
 
+    // TODO: tests
     List<RouteStop> findAllByRouteId(String routeId);
 
     RouteStop findByRouteIdAndPassengerEnumEquals(String routeId, String passengerEnum);

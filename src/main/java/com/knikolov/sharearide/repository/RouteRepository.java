@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface RouteRepository extends JpaRepository<Route, String> {
 
+    // TODO: tests
     @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE rs.userId = ?1 AND rs.passengerEnum = 'DRIVER' AND r.dateRoute <= ?2 AND r.canceled = false")
     List<Route> findAllPastByUserIdAsDriver(User userId, LocalDateTime date);
 
@@ -25,9 +26,22 @@ public interface RouteRepository extends JpaRepository<Route, String> {
     @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute > ?1 AND rs.passengerEnum = 'DRIVER' AND rs.userId.id <> ?2 ORDER BY r.id DESC")
     List<Route> findAllByOrderByIdDesc(LocalDateTime now, String userId);
 
+    @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute <= ?1 AND rs.passengerEnum = 'DRIVER' AND rs.userId.id = ?2 AND r.canceled = false ORDER BY r.id DESC")
+    List<Route> findAllPastByOrderByIdDescAsDriver(LocalDateTime now, String userId);
+
+    @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute <= ?1 AND rs.passengerEnum = 'DRIVER' AND rs.userId.id = ?2 AND r.canceled = false ORDER BY r.id ASC")
+    List<Route> findAllPastByOrderByIdAscAsDriver(LocalDateTime now, String userId);
+
+    @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute <= ?1 AND rs.passengerEnum = 'PASSENGER' AND rs.userId.id = ?2 AND r.canceled = false ORDER BY r.id DESC")
+    List<Route> findAllPastByOrderByIdDescAsPassenger(LocalDateTime now, String userId);
+
+    @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE r.dateRoute <= ?1 AND rs.passengerEnum = 'PASSENGER' AND rs.userId.id = ?2 AND r.canceled = false ORDER BY r.id ASC")
+    List<Route> findAllPastByOrderByIdAscAsPassenger(LocalDateTime now, String userId);
+
     @Query(value = "SELECT r FROM Route r JOIN RouteStop rs ON r.id = rs.routeId WHERE rs.userId = ?1 AND rs.passengerEnum = 'DRIVER' AND r.canceled = false")
     List<Route> findAllByUserIdAsDriver(User user);
 
     List<Route> findAllByCarIdAndDateRouteAfterAndCanceledEquals(String car_id, LocalDateTime dateRoute, Boolean canceled);
 
+    List<Route> findAllByDateRouteBetweenAndCanceledFalseOrderByDateRouteAsc(LocalDateTime dateRoute, LocalDateTime dateRoute2);
 }

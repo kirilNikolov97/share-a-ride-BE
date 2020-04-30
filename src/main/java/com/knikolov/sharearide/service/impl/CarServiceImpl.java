@@ -7,7 +7,6 @@ import com.knikolov.sharearide.repository.CarRepository;
 import com.knikolov.sharearide.repository.RouteRepository;
 import com.knikolov.sharearide.repository.UserRepository;
 import com.knikolov.sharearide.service.CarService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ public class CarServiceImpl implements CarService {
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
 
-    @Autowired
     public CarServiceImpl(CarRepository carRepository, UserRepository userRepository, RouteRepository routeRepository) {
         this.carRepository = carRepository;
         this.userRepository = userRepository;
@@ -109,7 +107,7 @@ public class CarServiceImpl implements CarService {
 
     private void validateIfDriver(User user) {
         if (!user.isDriver()) {
-            throw new IllegalArgumentException("You are not a driver. Can not create new car.");
+            throw new IllegalArgumentException("You are not a driver.");
         }
     }
 

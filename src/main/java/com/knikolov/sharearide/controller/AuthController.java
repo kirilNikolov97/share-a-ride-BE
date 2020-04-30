@@ -65,6 +65,7 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 userDetails.getIsDriver(),
+                userDetails.getCompany(),
                 roles));
     }
 

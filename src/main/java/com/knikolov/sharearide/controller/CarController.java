@@ -3,7 +3,6 @@ package com.knikolov.sharearide.controller;
 import com.knikolov.sharearide.dto.CarDto;
 import com.knikolov.sharearide.models.Car;
 import com.knikolov.sharearide.service.CarService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -16,7 +15,6 @@ public class CarController {
 
     private final CarService carService;
 
-    @Autowired
     public CarController(CarService carService) {
         this.carService = carService;
     }
@@ -27,7 +25,7 @@ public class CarController {
     }
 
     @RequestMapping(value = "/car/{carId}", method = RequestMethod.GET)
-    Car getCarById(@PathVariable String carId, Principal principal) {
+    Car getCarById(@PathVariable String carId) {
         return carService.getCarById(carId);
     }
 
@@ -42,6 +40,7 @@ public class CarController {
         return carService.addNewCar(car, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/car", method = RequestMethod.PATCH)
     Car updateCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);

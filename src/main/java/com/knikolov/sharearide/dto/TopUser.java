@@ -7,11 +7,13 @@ public class TopUser implements Comparable<TopUser>{
     private User user;
     private Integer numberRides;
     private Integer passengersNumber;
+    private Double rating;
 
-    public TopUser(User user, Integer numberRides, Integer passengersNumber) {
+    public TopUser(User user, Integer numberRides, Integer passengersNumber, Double rating) {
         this.user = user;
         this.numberRides = numberRides;
         this.passengersNumber = passengersNumber;
+        this.rating = rating;
     }
 
     public User getUser() {
@@ -36,6 +38,14 @@ public class TopUser implements Comparable<TopUser>{
 
     public void setPassengersNumber(Integer passengersNumber) {
         this.passengersNumber = passengersNumber;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
     }
 
     @Override

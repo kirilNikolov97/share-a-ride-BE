@@ -1,5 +1,7 @@
 package com.knikolov.sharearide.beans;
 
+import com.cloudinary.Cloudinary;
+import com.knikolov.sharearide.security.services.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,6 +28,11 @@ public class EmailBean {
         props.put("mail.debug", "true");
 
         return mailSender;
+    }
+
+    @Bean
+    public Cloudinary cloudinary() {
+        return new Cloudinary("cloudinary://217767699556896:JVB83ZLGGFv_TiB2QUhWz8VI07E@dfbmpnqdu/");
     }
 
 }

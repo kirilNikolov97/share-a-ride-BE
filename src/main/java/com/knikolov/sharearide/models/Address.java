@@ -54,6 +54,14 @@ public class Address {
         this.additionalInfo = additionalInfo;
     }
 
+    public Address(String id, City city, String district, String street, String additionalInfo) {
+        this.id = id;
+        this.city = city;
+        this.district = district;
+        this.street = street;
+        this.additionalInfo = additionalInfo;
+    }
+
     public void setId(String id) {
         this.id = id;
     }

@@ -50,6 +50,17 @@ public class Car {
         this.color = color;
     }
 
+    public Car(String id, String userId, String manufacturer, String model, int seats, int year, String color, Boolean deleted) {
+        this.id = id;
+        this.userId = userId;
+        this.manufacturer = manufacturer;
+        this.model = model;
+        this.seats = seats;
+        this.year = year;
+        this.color = color;
+        this.deleted = deleted;
+    }
+
     public String getId() {
         return id;
     }

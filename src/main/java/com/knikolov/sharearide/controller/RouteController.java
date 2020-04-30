@@ -4,9 +4,8 @@ import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.Route;
 import com.knikolov.sharearide.models.RouteStop;
-import com.knikolov.sharearide.service.EmailService;
+import com.knikolov.sharearide.service.impl.EmailService;
 import com.knikolov.sharearide.service.RouteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -21,20 +20,46 @@ public class RouteController {
     private final RouteService routeService;
     private final EmailService emailService;
 
-    @Autowired
     public RouteController(RouteService routeService, EmailService emailService) {
         this.routeService = routeService;
         this.emailService = emailService;
     }
 
+    // TODO: test
     @RequestMapping(value = "/routesAsDriver", method = RequestMethod.GET)
-    List<Route> getRoutesByUsernameAsDriver(@RequestParam String username, Principal principal) {
-        if ("".equals(username)) {
-            return this.routeService.getAllRoutesByUserAsDriver(principal.getName());
+    List<Route> getRoutesByUsernameAsDriver(@RequestParam String username, @RequestParam String sortBy,
+            @RequestParam Integer limit, Principal principal) {
+
+        SortBy sortByEnum;
+        if (sortBy.equals("date_desc")) {
+            sortByEnum = SortBy.DATE_DESC;
+        } else if (sortBy.equals("date_asc")) {
+            sortByEnum = SortBy.DATE_ASC;
+        } else {
+            sortByEnum = SortBy.NONE;
         }
-        return this.routeService.getAllRoutesByUserAsDriver(username);
+
+        if ("".equals(username)) {
+            List<Route> routes = this.routeService.getAllRoutesByUserAsDriver(principal.getName(), sortByEnum);
+            if (limit == -1) {
+                return routes;
+            } else if (routes.size() <= limit) {
+                return routes;
+            } else {
+                return routes.subList(0, limit);
+            }
+        }
+        List<Route> routes = this.routeService.getAllRoutesByUserAsDriver(username, sortByEnum);
+        if (limit == -1) {
+            return routes;
+        } else if (routes.size() <= limit) {
+            return routes;
+        } else {
+            return routes.subList(0, limit);
+        }
     }
 
+    // TODO: test
     @RequestMapping(value = "/futureRoutesAsDriver", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsDriver(@RequestParam String username, Principal principal) {
         if ("".equals(username)) {
@@ -44,57 +69,86 @@ public class RouteController {
         return this.routeService.getAllFutureRoutesByUserAsDriver(username);
     }
 
+    // TODO: test
     @RequestMapping(value = "/futureRoutesAsPassenger", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsPassenger(Principal principal) {
         return this.routeService.getAllFutureRoutesByUserAsPassenger(principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/routesAsPassenger", method = RequestMethod.GET)
-    List<Route> getRoutesByUsernameAsPassenger(Principal principal) {
-        return this.routeService.getAllRoutesByUserAsPassenger(principal.getName());
+    List<Route> getRoutesByUsernameAsPassenger(@RequestParam String sortBy, @RequestParam Integer limit, Principal principal) {
+
+        SortBy sortByEnum;
+        if (sortBy.equals("date_desc")) {
+            sortByEnum = SortBy.DATE_DESC;
+        } else if (sortBy.equals("date_asc")) {
+            sortByEnum = SortBy.DATE_ASC;
+        } else {
+            sortByEnum = SortBy.NONE;
+        }
+
+        List<Route> routes = this.routeService.getAllRoutesByUserAsPassenger(sortByEnum, principal.getName());
+        if (limit == -1) {
+            return routes;
+        } else if (routes.size() <= limit) {
+            return routes;
+        } else {
+            return routes.subList(0, limit);
+        }
     }
 
+    // TODO: test
     @RequestMapping(value = "/route/{routeId}", method = RequestMethod.GET)
     Route getRouteById(@PathVariable String routeId, @RequestParam Boolean validate, Principal principal) {
         return this.routeService.getRouteById(routeId, validate, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/route", method = RequestMethod.POST)
-    Route addNewRoute(@RequestParam String carId, @RequestParam String addressId, @RequestParam Boolean officeDirection,
+    Route addNewRoute(@RequestParam String carId, @RequestParam String addressId,
+                      @RequestParam Boolean officeDirection, @RequestParam String companyAddressId,
                       @RequestBody LocalDateTime date, Principal principal) {
         validateRoute(carId, addressId, officeDirection, date);
 
         emailService.sendTestEmail();
         // TODO: check if correct
         date = date.plusHours(3);
-        return this.routeService.addNewRoute(carId, addressId, officeDirection, date, principal.getName());
+        return this.routeService.addNewRoute(carId, addressId, officeDirection, date, companyAddressId, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/route", method = RequestMethod.PATCH)
     Route updateFutureRoute(@RequestParam String carId, @RequestParam String addressId, @RequestParam String routeId,
-                            @RequestParam Boolean officeDirection, @RequestBody LocalDateTime date, Principal principal) {
+                            @RequestParam Boolean officeDirection, @RequestParam String officeAddressId,
+                            @RequestBody LocalDateTime date, Principal principal) {
         validateRoute(carId, addressId, officeDirection, date);
 
-        return this.routeService.updateFutureRoute(carId, addressId, routeId, date, officeDirection, principal.getName());
+        return this.routeService.updateFutureRoute(carId, addressId, routeId, date, officeDirection, officeAddressId, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/cancelRoute", method = RequestMethod.PATCH)
     Route cancelRoute(@RequestParam String routeId, Principal principal) {
         return this.routeService.cancelRoute(routeId, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/lastRoutes", method = RequestMethod.GET)
     List<Route> getLastRoutes(@RequestParam Integer limit, Principal principal) {
         return this.routeService.getLastRoutes(limit, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/saveSeat/{routeId}", method = RequestMethod.GET)
     RouteStop saveSeat(@PathVariable String routeId, @RequestParam String addressId, Principal principal) {
         return this.routeService.saveSeat(routeId, addressId, principal.getName());
     }
 
+    // TODO: test
     @RequestMapping(value = "/route/allRoutes", method = RequestMethod.GET)
-    List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy, @RequestParam String filter) {
+    List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
+                          @RequestParam String filter, Principal principal) {
         SortBy sortByEnum;
         if (sortBy.equals("date_desc")) {
             sortByEnum = SortBy.DATE_DESC;
@@ -105,13 +159,15 @@ public class RouteController {
         }
 
         List<Route> routes = new ArrayList<>();
-        this.routeService.getRoutes(currPage - 1, sortByEnum, filter).forEach(routes::add);
+        this.routeService.getRoutes(currPage - 1, sortByEnum, filter, principal.getName()).forEach(routes::add);
         return routes;
     }
 
+    // TODO: test
     @RequestMapping(value = "/route/betweenDates", method = RequestMethod.GET)
     List<Route> getRoutesBetweenDates(@RequestParam Integer currPage, @RequestParam String sortBy,
-                                      @RequestParam String filter, @RequestParam String startDate, @RequestParam String endDate) {
+                                      @RequestParam String filter, @RequestParam String startDate,
+                                      @RequestParam String endDate, @RequestParam String officeAddressId, Principal principal) {
         LocalDateTime start = Instant.ofEpochMilli(Long.parseLong(startDate)).atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = Instant.ofEpochMilli(Long.parseLong(endDate)).atZone(ZoneId.systemDefault()).toLocalDateTime();
 
@@ -125,20 +181,35 @@ public class RouteController {
         }
 
         List<Route> routes = new ArrayList<>();
-        this.routeService.getRoutesBetween(start, end, currPage-1, sortByEnum).forEach(routes::add);
+        this.routeService.getRoutesBetween(start, end, currPage-1, sortByEnum, principal.getName(), officeAddressId).forEach(routes::add);
         return routes;
     }
 
+    // TODO: test
     @RequestMapping(value = "/top15Users", method = RequestMethod.GET)
     List<TopUser> getTop15Users() {
-        List<TopUser> y = this.routeService.getTop15Riders();
-        return y;
+        return this.routeService.getTop15Riders();
     }
 
+    // TODO: test
+    @RequestMapping(value = "/top15UsersByDrives", method = RequestMethod.GET)
+    List<TopUser> getTop15UsersByDrives() {
+        return this.routeService.getTop15RidersByDrives();
+    }
+
+    // TODO: test
+    @RequestMapping(value = "/top15UsersByRating", method = RequestMethod.GET)
+    List<TopUser> getTop15RidersByRating() {
+        return this.routeService.getTop15RidersByRating();
+    }
+
+    // TODO: test
     @RequestMapping(value = "route/sortAndFilter", method = RequestMethod.GET)
     List<Route> getSortAndFilterRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
                                        @RequestParam String filter, @RequestParam String startDate,
-                                       @RequestParam String endDate, @RequestParam Boolean officeDirection) {
+                                       @RequestParam String endDate, @RequestParam Boolean officeDirection,
+                                       @RequestParam String officeAddressId,
+                                       Principal principal) {
 
         LocalDateTime start = Instant.ofEpochMilli(Long.parseLong(startDate)).atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = Instant.ofEpochMilli(Long.parseLong(endDate)).atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -152,11 +223,20 @@ public class RouteController {
             sortByEnum = SortBy.NONE;
         }
 
+        if ("".equals(officeAddressId)) {
+            officeDirection = null;
+        }
+
         List<Route> routes = new ArrayList<>();
-        this.routeService.sortAndFilter(start, end, currPage-1, sortByEnum, officeDirection).forEach(routes::add);
+        this.routeService.sortAndFilter(start, end, currPage-1, sortByEnum, officeDirection, principal.getName(), officeAddressId).forEach(routes::add);
         return routes;
     }
 
+    // TODO: test
+    @RequestMapping(value = "/allRoutes", method = RequestMethod.GET)
+    List<Route> getAllRoutes() {
+        return this.routeService.getAllRoutes();
+    }
 
     private void validateRoute(String carId, String addressId, Boolean officeDirection, LocalDateTime date) {
         if (carId == null || "".equals(carId.trim())) {

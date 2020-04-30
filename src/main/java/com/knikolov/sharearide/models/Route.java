@@ -23,16 +23,29 @@ public class Route implements Serializable {
     @Column(name = "office_direction")
     private Boolean officeDirection;
 
+    @Column(name = "office_address_id")
+    private String officeAddressId;
+
     @ManyToOne
     @JoinColumn(name = "car_id")
     private Car car;
 
+    //TODO:
     @OneToMany(mappedBy = "routeId", fetch = FetchType.EAGER)
     private List<RouteStop> routeStops;
 
     public Route() {
         this.id = UUID.randomUUID().toString();
         this.canceled = Boolean.FALSE;
+    }
+
+    public Route(String id, LocalDateTime dateRoute, Boolean canceled, Boolean officeDirection, String officeAddressId, Car car) {
+        this.id = id;
+        this.dateRoute = dateRoute;
+        this.canceled = canceled;
+        this.officeDirection = officeDirection;
+        this.officeAddressId = officeAddressId;
+        this.car = car;
     }
 
     public String getId() {
@@ -77,5 +90,13 @@ public class Route implements Serializable {
 
     public void setOfficeDirection(Boolean officeDirection) {
         this.officeDirection = officeDirection;
+    }
+
+    public String getOfficeAddressId() {
+        return officeAddressId;
+    }
+
+    public void setOfficeAddressId(String officeAddressId) {
+        this.officeAddressId = officeAddressId;
     }
 }

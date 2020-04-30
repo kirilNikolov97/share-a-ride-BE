@@ -19,6 +19,7 @@ public class UserDetailsImpl implements UserDetails {
     private String username;
     private String email;
     private Boolean isDriver;
+    private Boolean isCompany;
 
     @JsonIgnore
     private String password;
@@ -26,13 +27,14 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
 
-    public UserDetailsImpl(String id, String username, String email, String password, Boolean isDriver,
+    public UserDetailsImpl(String id, String username, String email, String password, Boolean isDriver, Boolean isCompany,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.isDriver = isDriver;
+        this.isCompany = isCompany;
         this.authorities = authorities;
     }
 
@@ -47,6 +49,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.isDriver(),
+                user.getCompany(),
                 authorities);
     }
 
@@ -129,5 +132,13 @@ public class UserDetailsImpl implements UserDetails {
 
     public void setIsDriver(Boolean isDriver) {
         this.isDriver = isDriver;
+    }
+
+    public Boolean getCompany() {
+        return isCompany;
+    }
+
+    public void setCompany(Boolean company) {
+        isCompany = company;
     }
 }

@@ -5,6 +5,7 @@ import com.knikolov.sharearide.models.Car;
 import com.knikolov.sharearide.models.Rating;
 import com.knikolov.sharearide.models.Role;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ public class UserDto {
     private LocalDateTime created;
     private String companyId;
     private Boolean isCompany;
+    private String pictureUrl;
     private List<Rating> ratings;
     private Set<Role> roles = new HashSet<>();
     private List<Address> addresses;
@@ -140,5 +142,13 @@ public class UserDto {
 
     public void setCars(List<Car> cars) {
         this.cars = cars;
+    }
+
+    public String getPictureUrl() {
+        return pictureUrl;
+    }
+
+    public void setPictureUrl(String pictureUrl) {
+        this.pictureUrl = pictureUrl;
     }
 }

@@ -14,8 +14,10 @@ public class User implements Serializable {
     @Id
     @Column
     private String id;
+
     @Column
     private String username;
+
     @Column
     private String password;
 
@@ -42,6 +44,9 @@ public class User implements Serializable {
 
     @Column(name = "is_company")
     private Boolean isCompany;
+
+    @Column(name = "picture_url")
+    private String pictureUrl;
 
     @OneToMany(mappedBy = "ratingId.driverId", cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
     private List<Rating> ratings;
@@ -77,6 +82,22 @@ public class User implements Serializable {
         this.isCompany = isCompany;
     }
 
+    public User(String id, String username, String email, String encode, String firstName, String lastName, String phone, Boolean isCompany, Boolean isDriver) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = encode;
+        this.created = LocalDateTime.now();
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.isCompany = isCompany;
+        this.isDriver = isDriver;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getId() {
         return id;
@@ -193,4 +214,14 @@ public class User implements Serializable {
     public void setRatings(List<Rating> ratings) {
         this.ratings = ratings;
     }
+
+    public String getPictureUrl() {
+        return pictureUrl;
+    }
+
+    public void setPictureUrl(String pictureUrl) {
+        this.pictureUrl = pictureUrl;
+    }
+
+
 }

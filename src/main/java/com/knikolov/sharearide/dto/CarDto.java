@@ -13,6 +13,16 @@ public class CarDto {
     public CarDto() {
     }
 
+    public CarDto(String id, String userId, String manufacturer, String model, int seats, int year, String color) {
+        this.id = id;
+        this.userId = userId;
+        this.manufacturer = manufacturer;
+        this.model = model;
+        this.seats = seats;
+        this.year = year;
+        this.color = color;
+    }
+
     public String getId() {
         return id;
     }

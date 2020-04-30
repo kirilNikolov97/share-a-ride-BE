@@ -15,6 +15,17 @@ public class AddressDto {
     public AddressDto() {
     }
 
+    public AddressDto(String id, City city, String district, String street, String additionalInfo,
+                      Double latitude, Double longitude) {
+        this.id = id;
+        this.city = city;
+        this.district = district;
+        this.street = street;
+        this.additionalInfo = additionalInfo;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
     public String getId() {
         return id;
     }

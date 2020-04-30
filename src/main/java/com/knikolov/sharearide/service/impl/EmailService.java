@@ -1,9 +1,8 @@
-package com.knikolov.sharearide.service;
+package com.knikolov.sharearide.service.impl;
 
 import com.knikolov.sharearide.models.Route;
 import com.knikolov.sharearide.models.RouteStop;
 import com.knikolov.sharearide.repository.RouteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -17,7 +16,6 @@ public class EmailService {
     private final JavaMailSender emailSender;
     private final RouteRepository routeRepository;
 
-    @Autowired
     public EmailService(JavaMailSender javaMailSender, RouteRepository routeRepository) {
         this.emailSender = javaMailSender;
         this.routeRepository = routeRepository;
@@ -86,6 +84,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void sendEmailForDeletedRouteStop(String driverEmail) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(driverEmail);
