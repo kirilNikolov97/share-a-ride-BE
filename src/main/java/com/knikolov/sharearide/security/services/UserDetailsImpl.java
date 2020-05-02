@@ -20,6 +20,7 @@ public class UserDetailsImpl implements UserDetails {
     private String email;
     private Boolean isDriver;
     private Boolean isCompany;
+    private Boolean isBlocked;
 
     @JsonIgnore
     private String password;
@@ -27,7 +28,7 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
 
-    public UserDetailsImpl(String id, String username, String email, String password, Boolean isDriver, Boolean isCompany,
+    public UserDetailsImpl(String id, String username, String email, String password, Boolean isDriver, Boolean isCompany, Boolean isBlocked,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
@@ -35,6 +36,7 @@ public class UserDetailsImpl implements UserDetails {
         this.password = password;
         this.isDriver = isDriver;
         this.isCompany = isCompany;
+        this.isBlocked = isBlocked;
         this.authorities = authorities;
     }
 
@@ -50,6 +52,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getPassword(),
                 user.isDriver(),
                 user.getCompany(),
+                user.getBlocked(),
                 authorities);
     }
 
@@ -140,5 +143,13 @@ public class UserDetailsImpl implements UserDetails {
 
     public void setCompany(Boolean company) {
         isCompany = company;
+    }
+
+    public Boolean getBlocked() {
+        return isBlocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        isBlocked = blocked;
     }
 }

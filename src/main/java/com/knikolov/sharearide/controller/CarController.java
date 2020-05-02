@@ -40,7 +40,6 @@ public class CarController {
         return carService.addNewCar(car, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/car", method = RequestMethod.PATCH)
     Car updateCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);

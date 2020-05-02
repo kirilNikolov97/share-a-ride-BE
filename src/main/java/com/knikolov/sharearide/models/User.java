@@ -45,6 +45,9 @@ public class User implements Serializable {
     @Column(name = "is_company")
     private Boolean isCompany;
 
+    @Column(name = "is_blocked")
+    private Boolean isBlocked;
+
     @Column(name = "picture_url")
     private String pictureUrl;
 
@@ -70,7 +73,7 @@ public class User implements Serializable {
         this.id = UUID.randomUUID().toString();
     }
 
-    public User(String username, String email, String encode, String firstName, String lastName, String phone, Boolean isCompany) {
+    public User(String username, String email, String encode, String firstName, String lastName, String phone, Boolean isCompany, Boolean isBlocked) {
         this.id = UUID.randomUUID().toString();
         this.username = username;
         this.email = email;
@@ -80,6 +83,7 @@ public class User implements Serializable {
         this.lastName = lastName;
         this.phone = phone;
         this.isCompany = isCompany;
+        this.isBlocked = isBlocked;
     }
 
     public User(String id, String username, String email, String encode, String firstName, String lastName, String phone, Boolean isCompany, Boolean isDriver) {
@@ -223,5 +227,11 @@ public class User implements Serializable {
         this.pictureUrl = pictureUrl;
     }
 
+    public Boolean getBlocked() {
+        return isBlocked;
+    }
 
+    public void setBlocked(Boolean blocked) {
+        isBlocked = blocked;
+    }
 }

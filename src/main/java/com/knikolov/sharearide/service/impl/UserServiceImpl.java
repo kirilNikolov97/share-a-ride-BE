@@ -5,8 +5,10 @@ import com.cloudinary.utils.ObjectUtils;
 import com.knikolov.sharearide.dto.AddressDto;
 import com.knikolov.sharearide.dto.PasswordChange;
 import com.knikolov.sharearide.dto.UserDto;
+import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
+import com.knikolov.sharearide.service.RouteService;
 import com.knikolov.sharearide.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -293,6 +295,7 @@ public class UserServiceImpl implements UserService {
         dto.setCars(user.getCars());
         dto.setCompany(user.getCompany());
         dto.setPictureUrl(user.getPictureUrl());
+        dto.setBlocked(user.getBlocked());
 
         return dto;
     }
@@ -347,6 +350,7 @@ public class UserServiceImpl implements UserService {
         user.setAddresses(userDto.getAddresses());
         user.setCars(userDto.getCars());
         user.setCompany(userDto.getCompany());
+        user.setBlocked(userDto.getBlocked());
 
         return user;
     }
@@ -362,4 +366,78 @@ public class UserServiceImpl implements UserService {
         }
         return usersDtos;
     }
+
+    @Override
+    public List<UserDto> searchNotBlockedByUsername(String username) {
+        List<User> users = this.userRepository.findAllByUsernameContainsAndIsBlockedEquals(username, false);
+        List<UserDto> usersDtos = new ArrayList<>();
+
+        for (User u : users) {
+            UserDto dto = userToUserDto(u);
+            usersDtos.add(dto);
+        }
+        return usersDtos;
+    }
+
+    @Override
+    public User blockUser(String userId, String username) {
+        User user = this.userRepository.findByUsername(username);
+
+        if (!user.getCompany()) {
+            throw new IllegalArgumentException("You have no rights to block the user");
+        } else if (user.getId().equals(userId)) {
+            throw new IllegalArgumentException("You can not block yourself");
+        }
+
+        User toBeBlocked = this.userRepository.findById(userId).orElse(null);
+        toBeBlocked.setBlocked(true);
+        List<Route> routes = this.routeRepository.findAllFutureRoutesByUserIdAsDriver(toBeBlocked, LocalDateTime.now());
+        List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumAndUserIdEquals(PassengerEnum.PASSENGER.toString(), toBeBlocked);
+
+        for (Route route : routes) {
+            this.cancelRoute(route.getId(), toBeBlocked.getUsername());
+        }
+        for (RouteStop routeStop : routeStops) {
+            Route route = this.routeRepository.findById(routeStop.getRouteId()).orElse(null);
+            if (route.getDateRoute().compareTo(LocalDateTime.now()) > 0) {
+                deleteRouteStopById(routeStop.getId(), toBeBlocked.getUsername());
+            }
+        }
+        return this.userRepository.save(toBeBlocked);
+    }
+
+    @Override
+    public User unblockUser(String userId, String username) {
+        User user = this.userRepository.findByUsername(username);
+
+        if (!user.getCompany()) {
+            throw new IllegalArgumentException("You have no rights to unblock the user");
+        } else if (user.getId().equals(userId)) {
+            throw new IllegalArgumentException("You can not unblock yourself");
+        }
+
+        User toBeBlocked = this.userRepository.findById(userId).orElse(null);
+        toBeBlocked.setBlocked(false);
+        return this.userRepository.save(toBeBlocked);
+    }
+
+    private Route cancelRoute(String routeId, String driverName) {
+        Route routeToCancel = this.routeRepository.findById(routeId).orElse(null);
+        User driver = this.userRepository.findByUsername(driverName);
+
+        if (routeToCancel != null) {
+            if (!routeToCancel.getCar().getUserId().equals(driver.getId())) {
+                throw new IllegalArgumentException("This route is not present in your profile");
+            }
+
+            routeToCancel.setCanceled(true);
+            Route savedRoute = this.routeRepository.save(routeToCancel);
+
+            this.emailService.sendEmailsForCanceledRoute(routeId, driverName);
+            return savedRoute;
+        } else {
+            throw new IllegalArgumentException("Something went wrong. Try again later");
+        }
+    }
+
 }

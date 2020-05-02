@@ -51,4 +51,10 @@ public interface UserService {
     Integer countByDriverFalse();
 
     List<UserDto> searchByUsername(String username);
+
+    List<UserDto> searchNotBlockedByUsername(String username);
+
+    User blockUser(String userId, String name);
+
+    User unblockUser(String userId, String name);
 }

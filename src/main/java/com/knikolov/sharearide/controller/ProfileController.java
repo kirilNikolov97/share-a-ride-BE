@@ -24,14 +24,12 @@ public class ProfileController {
         this.userService = userService;
     }
 
-    // TODO: test
     @RequestMapping(value = "/user", method = RequestMethod.GET)
     UserDto getUser(Principal principal) {
         User user =  userService.getUserByUsername(principal.getName());
         return userService.userToUserDto(user);
     }
 
-    // TODO: test
     @RequestMapping(value = "/user", method = RequestMethod.PATCH)
     UserDto updateUser(@RequestBody UserDto userDto, Principal principal) {
         validateUserDto(userDto);
@@ -43,7 +41,6 @@ public class ProfileController {
         }
     }
 
-    // TODO: test
     @RequestMapping(value = "/uploadPicture", method = RequestMethod.POST)
     String uploadPicture(@RequestParam("file") MultipartFile file, Principal principal) {
         try {
@@ -57,13 +54,11 @@ public class ProfileController {
         }
     }
 
-    // TODO: test
     @RequestMapping(value = "/address", method = RequestMethod.GET)
     List<Address> getAddress(Principal principal) {
         return userService.getAddressesByUsername(principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/companyAddresses", method = RequestMethod.GET)
     List<Address> getCompanyAddresses(Principal principal) {
         User company = this.userService.getCompany(principal.getName());
@@ -84,7 +79,6 @@ public class ProfileController {
         return userService.addNewAddress(address, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/address", method = RequestMethod.PATCH)
     Address updateAddress(@RequestBody AddressDto address, Principal principal) {
         validateAddress(address);
@@ -163,9 +157,24 @@ public class ProfileController {
     }
 
     // TODO: test
-    @RequestMapping(value = "searchUser", method = RequestMethod.GET)
+    @RequestMapping(value = "/searchUser", method = RequestMethod.GET)
     List<UserDto> searchUsers(@RequestParam String username) {
         return this.userService.searchByUsername(username);
+    }
+
+    @RequestMapping(value = "/searchNotBlockedUser", method = RequestMethod.GET)
+    List<UserDto> searchNotBlockedUsers(@RequestParam String username) {
+        return this.userService.searchNotBlockedByUsername(username);
+    }
+
+    @RequestMapping(value = "/blockUser", method = RequestMethod.PATCH)
+    User blockUser(@RequestParam String userId, Principal principal) {
+        return this.userService.blockUser(userId, principal.getName());
+    }
+
+    @RequestMapping(value = "/unblockUser", method = RequestMethod.PATCH)
+    User unblockUser(@RequestParam String userId, Principal principal) {
+        return this.userService.unblockUser(userId, principal.getName());
     }
 
     private void validateUserDto(UserDto user) {

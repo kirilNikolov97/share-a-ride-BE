@@ -22,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findAllByDriverEqualsFalse();
 
     List<User> findAllByUsernameContains(String username);
+
+    List<User> findAllByUsernameContainsAndIsBlockedEquals(String username, Boolean blocked);
 }

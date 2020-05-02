@@ -66,6 +66,7 @@ public class AuthController {
                 userDetails.getEmail(),
                 userDetails.getIsDriver(),
                 userDetails.getCompany(),
+                userDetails.getBlocked(),
                 roles));
     }
 
@@ -83,7 +84,6 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // TODO: check if user is company or employee
         // Create new user's account
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
@@ -91,6 +91,7 @@ public class AuthController {
                 signUpRequest.getFirstName(),
                 signUpRequest.getLastName(),
                 signUpRequest.getPhone(),
+                false,
                 false);
 
         //TODO

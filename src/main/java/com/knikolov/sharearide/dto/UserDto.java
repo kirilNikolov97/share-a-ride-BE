@@ -23,6 +23,7 @@ public class UserDto {
     private LocalDateTime created;
     private String companyId;
     private Boolean isCompany;
+    private Boolean isBlocked;
     private String pictureUrl;
     private List<Rating> ratings;
     private Set<Role> roles = new HashSet<>();
@@ -30,6 +31,16 @@ public class UserDto {
     private List<Car> cars;
 
     public UserDto() {
+    }
+
+    public UserDto(String id, String username, String firstName, String lastName, String phone, String email, boolean isDriver) {
+        this.id = id;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.email = email;
+        this.isDriver = isDriver;
     }
 
     public String getId() {
@@ -150,5 +161,13 @@ public class UserDto {
 
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
+    }
+
+    public Boolean getBlocked() {
+        return isBlocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        isBlocked = blocked;
     }
 }

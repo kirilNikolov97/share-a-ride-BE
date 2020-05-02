@@ -10,10 +10,11 @@ public class JwtResponse {
     private String email;
     private Boolean isDriver;
     private Boolean isCompany;
+    private Boolean blocked;
     private List<String> roles;
 
     public JwtResponse(String accessToken, String id, String username, String email, Boolean isDriver, Boolean isCompany,
-                       List<String> roles) {
+                       Boolean blocked, List<String> roles) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
@@ -21,6 +22,7 @@ public class JwtResponse {
         this.isDriver = isDriver;
         this.roles = roles;
         this.isCompany = isCompany;
+        this.blocked = blocked;
     }
 
     public String getAccessToken() {
@@ -81,5 +83,13 @@ public class JwtResponse {
 
     public void setCompany(Boolean company) {
         isCompany = company;
+    }
+
+    public Boolean getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        this.blocked = blocked;
     }
 }
