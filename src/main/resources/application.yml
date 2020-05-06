@@ -5,6 +5,8 @@ spring:
     initialization-mode: always
     username: b9e4e7d51c5d3c
     password: 8aa5cf60
+    hikari:
+      max-lifetime: 580000
   jpa:
     properties:
       hibernate:
