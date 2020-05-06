@@ -6,6 +6,7 @@ import com.knikolov.sharearide.dto.PasswordChange;
 import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
+import com.knikolov.sharearide.service.EmailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;

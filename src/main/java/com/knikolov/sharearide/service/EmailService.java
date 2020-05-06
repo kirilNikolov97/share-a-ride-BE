@@ -1,4 +1,4 @@
-package com.knikolov.sharearide.service.impl;
+package com.knikolov.sharearide.service;
 
 import com.knikolov.sharearide.models.Route;
 import com.knikolov.sharearide.models.RouteStop;

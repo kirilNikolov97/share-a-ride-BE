@@ -8,7 +8,7 @@ import com.knikolov.sharearide.dto.UserDto;
 import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
-import com.knikolov.sharearide.service.RouteService;
+import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

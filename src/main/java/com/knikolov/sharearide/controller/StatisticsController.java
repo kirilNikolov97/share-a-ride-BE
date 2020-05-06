@@ -20,7 +20,6 @@ public class StatisticsController {
         this.routeService = routeService;
     }
 
-    // TODO: test
     @RequestMapping(value = "/pieChartDriversData", method = RequestMethod.GET)
     public List<ChartData> getDriversCount() {
         List<ChartData> chartData = new ArrayList<>();
@@ -29,7 +28,6 @@ public class StatisticsController {
         return chartData;
     }
 
-    // TODO: test
     @RequestMapping(value = "/pieChartCitiesData", method = RequestMethod.GET)
     public List<ChartData> getCitiesData() {
         List<ChartData> chartData = new ArrayList<>();

@@ -4,7 +4,7 @@ import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.Route;
 import com.knikolov.sharearide.models.RouteStop;
-import com.knikolov.sharearide.service.impl.EmailService;
+import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +25,6 @@ public class RouteController {
         this.emailService = emailService;
     }
 
-    // TODO: test
     @RequestMapping(value = "/routesAsDriver", method = RequestMethod.GET)
     List<Route> getRoutesByUsernameAsDriver(@RequestParam String username, @RequestParam String sortBy,
             @RequestParam Integer limit, Principal principal) {
@@ -59,7 +58,6 @@ public class RouteController {
         }
     }
 
-    // TODO: test
     @RequestMapping(value = "/futureRoutesAsDriver", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsDriver(@RequestParam String username, Principal principal) {
         if ("".equals(username)) {
@@ -69,13 +67,11 @@ public class RouteController {
         return this.routeService.getAllFutureRoutesByUserAsDriver(username);
     }
 
-    // TODO: test
     @RequestMapping(value = "/futureRoutesAsPassenger", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsPassenger(Principal principal) {
         return this.routeService.getAllFutureRoutesByUserAsPassenger(principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/routesAsPassenger", method = RequestMethod.GET)
     List<Route> getRoutesByUsernameAsPassenger(@RequestParam String sortBy, @RequestParam Integer limit, Principal principal) {
 
@@ -98,26 +94,22 @@ public class RouteController {
         }
     }
 
-    // TODO: test
     @RequestMapping(value = "/route/{routeId}", method = RequestMethod.GET)
     Route getRouteById(@PathVariable String routeId, @RequestParam Boolean validate, Principal principal) {
         return this.routeService.getRouteById(routeId, validate, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/route", method = RequestMethod.POST)
     Route addNewRoute(@RequestParam String carId, @RequestParam String addressId,
                       @RequestParam Boolean officeDirection, @RequestParam String companyAddressId,
                       @RequestBody LocalDateTime date, Principal principal) {
         validateRoute(carId, addressId, officeDirection, date);
 
-        emailService.sendTestEmail();
         // TODO: check if correct
         date = date.plusHours(3);
         return this.routeService.addNewRoute(carId, addressId, officeDirection, date, companyAddressId, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/route", method = RequestMethod.PATCH)
     Route updateFutureRoute(@RequestParam String carId, @RequestParam String addressId, @RequestParam String routeId,
                             @RequestParam Boolean officeDirection, @RequestParam String officeAddressId,
@@ -127,25 +119,21 @@ public class RouteController {
         return this.routeService.updateFutureRoute(carId, addressId, routeId, date, officeDirection, officeAddressId, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/cancelRoute", method = RequestMethod.PATCH)
     Route cancelRoute(@RequestParam String routeId, Principal principal) {
         return this.routeService.cancelRoute(routeId, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/lastRoutes", method = RequestMethod.GET)
     List<Route> getLastRoutes(@RequestParam Integer limit, Principal principal) {
         return this.routeService.getLastRoutes(limit, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/saveSeat/{routeId}", method = RequestMethod.GET)
     RouteStop saveSeat(@PathVariable String routeId, @RequestParam String addressId, Principal principal) {
         return this.routeService.saveSeat(routeId, addressId, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/route/allRoutes", method = RequestMethod.GET)
     List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
                           @RequestParam String filter, Principal principal) {
@@ -163,7 +151,6 @@ public class RouteController {
         return routes;
     }
 
-    // TODO: test
     @RequestMapping(value = "/route/betweenDates", method = RequestMethod.GET)
     List<Route> getRoutesBetweenDates(@RequestParam Integer currPage, @RequestParam String sortBy,
                                       @RequestParam String filter, @RequestParam String startDate,
@@ -185,25 +172,21 @@ public class RouteController {
         return routes;
     }
 
-    // TODO: test
     @RequestMapping(value = "/top15Users", method = RequestMethod.GET)
     List<TopUser> getTop15Users() {
         return this.routeService.getTop15Riders();
     }
 
-    // TODO: test
     @RequestMapping(value = "/top15UsersByDrives", method = RequestMethod.GET)
     List<TopUser> getTop15UsersByDrives() {
         return this.routeService.getTop15RidersByDrives();
     }
 
-    // TODO: test
     @RequestMapping(value = "/top15UsersByRating", method = RequestMethod.GET)
     List<TopUser> getTop15RidersByRating() {
         return this.routeService.getTop15RidersByRating();
     }
 
-    // TODO: test
     @RequestMapping(value = "route/sortAndFilter", method = RequestMethod.GET)
     List<Route> getSortAndFilterRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
                                        @RequestParam String filter, @RequestParam String startDate,
@@ -232,7 +215,6 @@ public class RouteController {
         return routes;
     }
 
-    // TODO: test
     @RequestMapping(value = "/allRoutes", method = RequestMethod.GET)
     List<Route> getAllRoutes() {
         return this.routeService.getAllRoutes();

@@ -66,7 +66,6 @@ public class ProfileController {
         return userService.getAddressesByUsername(company.getUsername());
     }
 
-    // TODO: test
     @RequestMapping(value = "/address/{addressId}", method = RequestMethod.GET)
     Address getAddressById(@PathVariable String addressId, Principal principal) {
         return userService.getAddressById(addressId, principal.getName());
@@ -86,67 +85,57 @@ public class ProfileController {
         return userService.updateAddress(address, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/address", method = RequestMethod.DELETE)
     Address deleteAddress(@RequestParam("addressId") String addressId, Principal principal) {
         return userService.deleteAddress(addressId, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/becomeDriver", method = RequestMethod.GET)
     UserDto becomeDriver(Principal principal) {
         User user = this.userService.becomeDriver(principal.getName());
         return userService.userToUserDto(user);
     }
 
-    // TODO: test
     @RequestMapping(value = "/cities", method = RequestMethod.GET)
     List<City> getAllCities() {
         return this.userService.getAllCities();
     }
 
-    // TODO: test
     @RequestMapping(value = "/company", method = RequestMethod.GET)
     UserDto getCompany(Principal principal) {
         User user = this.userService.getCompany(principal.getName());
         return userService.userToUserDto(user);
     }
 
-    // TODO: test
     @RequestMapping(value = "/changePassword", method = RequestMethod.PATCH)
     Boolean changePassword(@RequestBody PasswordChange passwordChange, Principal principal) {
         validatePasswordChange(passwordChange);
         return this.userService.changePassword(passwordChange, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/approveOrDeclineRouteStop", method = RequestMethod.PATCH)
     RouteStop approveRoute(@RequestParam("routeStopId") String routeStopId, @RequestParam("approved") boolean approved,
                            Principal principal) {
         return this.userService.approveOrDeclineRoute(routeStopId, principal.getName(), approved);
     }
 
-    // TODO: test
     @RequestMapping(value = "/routeStop/{routeStopId}", method = RequestMethod.GET)
     RouteStop getRouteStopById(@PathVariable String routeStopId, Principal principal) {
         return this.userService.getRouteStopById(routeStopId);
     }
 
-    // TODO: test
     @RequestMapping(value = "/routeStop/{routeStopId}", method = RequestMethod.DELETE)
     RouteStop deleteRouteStopById(@PathVariable String routeStopId, Principal principal) {
         return this.userService.deleteRouteStopById(routeStopId, principal.getName());
     }
 
-    // TODO: test
-    @RequestMapping(value = "user/{userId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
     UserDto getUserById(@PathVariable String userId) {
         User user = this.userService.getUserById(userId);
         return userService.userToUserDto(user);
     }
 
-    // TODO: test
-    @RequestMapping(value = "rate", method = RequestMethod.POST)
+    @RequestMapping(value = "/rate", method = RequestMethod.POST)
     Rating rateUser(@RequestParam("userId") String userId, @RequestParam("rating") Integer rating, Principal principal) {
         User loggedUser = this.userService.getUserByUsername(principal.getName());
         if (loggedUser.getId().equals(userId)) {
@@ -156,7 +145,6 @@ public class ProfileController {
         return this.userService.rateUser(userId, rating, principal.getName());
     }
 
-    // TODO: test
     @RequestMapping(value = "/searchUser", method = RequestMethod.GET)
     List<UserDto> searchUsers(@RequestParam String username) {
         return this.userService.searchByUsername(username);

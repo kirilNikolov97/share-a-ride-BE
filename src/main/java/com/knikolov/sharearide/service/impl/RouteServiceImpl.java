@@ -6,6 +6,7 @@ import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
 import com.knikolov.sharearide.service.CarService;
+import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import com.knikolov.sharearide.service.UserService;
 import org.springframework.data.domain.PageRequest;
