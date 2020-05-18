@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 public interface RoutePagingAndSortingRepository extends PagingAndSortingRepository<Route, Integer> {
 
-    // TODO: tests
     Page<Route> findAllByDateRouteAfter(LocalDateTime dateRoute, Pageable pageable);
 
     Page<Route> findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime dateRoute, Boolean canceled, String car_userId, Pageable pageable);
