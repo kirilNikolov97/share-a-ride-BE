@@ -53,7 +53,7 @@ class RouteControllerTest {
     private Route route = new Route("routeId", LocalDateTime.now(), false, true, "officeAddressId", car);
     private User user = new User("userId", "username", "user@user.mail", "nz", "first",
             "last", "123321", false, true);
-    private Address address = new Address("addressId",new City("cityName"), "district", "street", "");
+    private Address address = new Address("addressId", "district", "street", "");
     private RouteStop routeStop = new RouteStop("routeStopId", "routeId", address, user, PassengerEnum.DRIVER.toString(), false);
     private TopUser topUser = new TopUser(user, 3, 4, 5d);
 

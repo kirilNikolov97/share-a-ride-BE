@@ -12,10 +12,6 @@ public class Address {
     @Column(name = "address_id")
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "city")
-    private City city;
-
     @Length(max = 64)
     private String district;
 
@@ -39,24 +35,21 @@ public class Address {
         this.id = UUID.randomUUID().toString();
     }
 
-    public Address(City city, String district, String street) {
+    public Address(String district, String street) {
         this.id = UUID.randomUUID().toString();
-        this.city = city;
         this.district = district;
         this.street = street;
     }
 
-    public Address(City city, String district, String street, String additionalInfo) {
+    public Address(String district, String street, String additionalInfo) {
         this.id = UUID.randomUUID().toString();
-        this.city = city;
         this.district = district;
         this.street = street;
         this.additionalInfo = additionalInfo;
     }
 
-    public Address(String id, City city, String district, String street, String additionalInfo) {
+    public Address(String id, String district, String street, String additionalInfo) {
         this.id = id;
-        this.city = city;
         this.district = district;
         this.street = street;
         this.additionalInfo = additionalInfo;
@@ -68,14 +61,6 @@ public class Address {
 
     public String getId() {
         return id;
-    }
-
-    public City getCity() {
-        return city;
-    }
-
-    public void setCity(City city) {
-        this.city = city;
     }
 
     public String getDistrict() {

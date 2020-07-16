@@ -28,8 +28,6 @@ public interface UserService {
 
     User becomeDriver(String name);
 
-    List<City> getAllCities();
-
     User getCompany(String username);
 
     Boolean changePassword(PasswordChange passwordChange, String username);

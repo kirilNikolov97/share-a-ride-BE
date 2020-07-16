@@ -25,7 +25,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
-    private final CityRepository cityRepository;
     private final RouteStopRepository routeStopRepository;
     private final RatingRepository ratingRepository;
     private final RouteRepository routeRepository;
@@ -34,12 +33,11 @@ public class UserServiceImpl implements UserService {
 
     private PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, AddressRepository addressRepository, CityRepository cityRepository,
+    public UserServiceImpl(UserRepository userRepository, AddressRepository addressRepository,
                            RouteStopRepository routeStopRepository, RatingRepository ratingRepository,
                            RouteRepository routeRepository, EmailService emailService, Cloudinary cloudinary, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
-        this.cityRepository = cityRepository;
         this.routeStopRepository = routeStopRepository;
         this.ratingRepository = ratingRepository;
         this.routeRepository = routeRepository;
@@ -107,7 +105,6 @@ public class UserServiceImpl implements UserService {
         Address newAddress = new Address();
         try {
             newAddress.setId(UUID.randomUUID().toString());
-            newAddress.setCity(addressDto.getCity());
             newAddress.setDistrict(addressDto.getDistrict());
             newAddress.setStreet(addressDto.getStreet());
             newAddress.setAdditionalInfo(addressDto.getAdditionalInfo());
@@ -135,7 +132,6 @@ public class UserServiceImpl implements UserService {
 
         if (currentAddress != null) {
             try {
-                currentAddress.setCity(address.getCity());
                 currentAddress.setDistrict(address.getDistrict());
                 currentAddress.setStreet(address.getStreet());
                 currentAddress.setAdditionalInfo(address.getAdditionalInfo());
@@ -200,11 +196,6 @@ public class UserServiceImpl implements UserService {
         User currentUser = this.userRepository.findByUsername(name);
         currentUser.setDriver(true);
         return this.userRepository.save(currentUser);
-    }
-
-    @Override
-    public List<City> getAllCities() {
-        return this.cityRepository.findAll();
     }
 
     @Override

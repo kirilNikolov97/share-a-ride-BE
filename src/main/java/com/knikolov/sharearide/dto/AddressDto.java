@@ -1,11 +1,9 @@
 package com.knikolov.sharearide.dto;
 
-import com.knikolov.sharearide.models.City;
 
 public class AddressDto {
 
     private String id;
-    private City city;
     private String district;
     private String street;
     private String additionalInfo;
@@ -15,10 +13,9 @@ public class AddressDto {
     public AddressDto() {
     }
 
-    public AddressDto(String id, City city, String district, String street, String additionalInfo,
+    public AddressDto(String id, String district, String street, String additionalInfo,
                       Double latitude, Double longitude) {
         this.id = id;
-        this.city = city;
         this.district = district;
         this.street = street;
         this.additionalInfo = additionalInfo;
@@ -32,14 +29,6 @@ public class AddressDto {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public City getCity() {
-        return city;
-    }
-
-    public void setCity(City city) {
-        this.city = city;
     }
 
     public String getDistrict() {

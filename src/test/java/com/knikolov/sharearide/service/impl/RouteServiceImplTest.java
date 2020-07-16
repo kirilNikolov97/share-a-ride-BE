@@ -58,7 +58,7 @@ class RouteServiceImplTest {
             "last", "123321", false, true);
     private User notDriver = new User("notDriverId", "notDriver", "not@driver.mail", "nz", "not",
             "driver", "123322", false, false);
-    private Address address = new Address("addressId",new City("cityName"), "district", "street", "");
+    private Address address = new Address("addressId", "district", "street", "");
     private Route route = new Route("routeId", LocalDateTime.now(), false, true, "officeAddressId", car);
     private Route canceledRoute = new Route("routeId", LocalDateTime.now(), true, true, "officeAddressId", car);
     private Route anotherRoute = new Route("anotherRouteId", LocalDateTime.now(), false, true, "officeAddressId", anotherCar);

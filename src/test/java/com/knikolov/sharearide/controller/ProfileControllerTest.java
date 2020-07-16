@@ -52,8 +52,8 @@ class ProfileControllerTest {
             "last", "123321", false, true);
     private UserDto companyDto = new UserDto("companyId", "company", "first",
             "last", "123321", "user@user.mail", false);
-    private Address address = new Address("addressId",new City("cityName"), "district", "street", "");
-    private AddressDto addressDto = new AddressDto("addressId", new City("cityName"), "district", "street", "", 100d, 100d);
+    private Address address = new Address("addressId", "district", "street", "");
+    private AddressDto addressDto = new AddressDto("addressId", "district", "street", "", 100d, 100d);
     private PasswordChange passwordChange = new PasswordChange("123", "321");
     private RouteStop routeStop = new RouteStop("routeStopId", "routeId", address, user, PassengerEnum.DRIVER.toString(), false);
     private RatingId ratingId = new RatingId("userId", "anotherUserId");

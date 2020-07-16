@@ -59,9 +59,9 @@ class UserServiceImplTest {
             "last", "123321", false, true);
     private User anotherUser = new User("anotherUserId", "username", "user@user.mail", "nz", "first",
             "last", "123321", false, true);
-    private Address address = new Address("addressId", new City("cityName"), "district", "street", "");
-    private Address anotherAddress = new Address("anotherAddressId", new City("cityName"), "district", "street", "");
-    private Address deletedAddress = new Address("deletedAddressId", new City("cityName"), "district", "street", "");
+    private Address address = new Address("addressId", "district", "street", "");
+    private Address anotherAddress = new Address("anotherAddressId", "district", "street", "");
+    private Address deletedAddress = new Address("deletedAddressId", "district", "street", "");
     private Car car = new Car("carId", "userId", "manufacturer", "model", 4, 1999,
             "color", false);
     private Route futureRouteDriver = new Route("anotherRouteId", LocalDateTime.now().plusHours(1) , false, true, "officeAddressId", car);
@@ -115,7 +115,7 @@ class UserServiceImplTest {
     @Test
     void whenAddNewAddress_thenSuccess() {
         // given
-        AddressDto addressDto = new AddressDto("addressDtoId", new City("cityName"), "district", "street", "additionalInfo", 1000d, 1000d);
+        AddressDto addressDto = new AddressDto("addressDtoId", "district", "street", "additionalInfo", 1000d, 1000d);
         user.setAddresses(new ArrayList<>());
 
         when(userRepository.findByUsername(any())).thenReturn(user);
@@ -133,7 +133,7 @@ class UserServiceImplTest {
     @Test
     void whenUpdateAddress_thenSuccess() {
         // given
-        AddressDto addressDto = new AddressDto("addressId", new City("cityName"), "district", "street", "additionalInfo", 1000d, 1000d);
+        AddressDto addressDto = new AddressDto("addressId", "district", "street", "additionalInfo", 1000d, 1000d);
         user.setAddresses(new ArrayList<Address>() {{ add(address); }});
 
         when(addressRepository.findById(any())).thenReturn(Optional.of(address));
@@ -150,7 +150,7 @@ class UserServiceImplTest {
     @Test
     void whenUpdateAddress_thenThrowNotFoundInProfile() {
         // given
-        AddressDto addressDto = new AddressDto("addressDtoId", new City("cityName"), "district", "street", "additionalInfo", 1000d, 1000d);
+        AddressDto addressDto = new AddressDto("addressDtoId", "district", "street", "additionalInfo", 1000d, 1000d);
         user.setAddresses(new ArrayList<Address>() {{ add(address); }});
 
         when(addressRepository.findById(any())).thenReturn(Optional.of(address));
@@ -167,7 +167,7 @@ class UserServiceImplTest {
     @Test
     void whenUpdateAddress_thenThrowAddressNotPresent() {
         // given
-        AddressDto addressDto = new AddressDto("addressId", new City("cityName"), "district", "street", "additionalInfo", 1000d, 1000d);
+        AddressDto addressDto = new AddressDto("addressId", "district", "street", "additionalInfo", 1000d, 1000d);
         user.setAddresses(new ArrayList<Address>() {{ add(address); }});
 
         when(addressRepository.findById(any())).thenReturn(Optional.ofNullable(null));

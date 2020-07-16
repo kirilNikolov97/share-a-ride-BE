@@ -96,11 +96,6 @@ public class ProfileController {
         return userService.userToUserDto(user);
     }
 
-    @RequestMapping(value = "/cities", method = RequestMethod.GET)
-    List<City> getAllCities() {
-        return this.userService.getAllCities();
-    }
-
     @RequestMapping(value = "/company", method = RequestMethod.GET)
     UserDto getCompany(Principal principal) {
         User user = this.userService.getCompany(principal.getName());
@@ -192,8 +187,6 @@ public class ProfileController {
     private void validateAddress(AddressDto address) {
         if (address == null) {
             throw new IllegalArgumentException("Something went wrong. Try again later,");
-        } else if (address.getCity() == null || address.getCity().getName() == null || "".equals(address.getCity().getName().trim())) {
-            throw new IllegalArgumentException("City field is not filled correct!");
         } else if (address.getDistrict() == null || "".equals(address.getDistrict().trim())) {
             throw new IllegalArgumentException("District field is not filled correct!");
         } else if (address.getStreet() == null || "".equals(address.getStreet().trim())) {
