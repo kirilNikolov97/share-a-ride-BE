@@ -5,10 +5,8 @@ import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
-import com.knikolov.sharearide.service.CarService;
 import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
-import com.knikolov.sharearide.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -21,29 +19,24 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// TODO: tests if there is enough time
 @Service
 public class RouteServiceImpl implements RouteService {
 
     private final RouteRepository routeRepository;
-    private final UserService userService;
-    private final CarService carService;
     private final CarRepository carRepository;
     private final AddressRepository addressRepository;
     private final RouteStopRepository routeStopRepository;
     private final RoutePagingAndSortingRepository routePagingAndSortingRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private static int PAGE_SIZE = 10;
+    private static int PAGE_SIZE = 5;
 
 
-    public RouteServiceImpl(RouteRepository routeRepository, UserService userService, CarService carService,
-                            CarRepository carRepository, AddressRepository addressRepository, RouteStopRepository routeStopRepository,
+    public RouteServiceImpl(RouteRepository routeRepository, CarRepository carRepository,
+                            AddressRepository addressRepository, RouteStopRepository routeStopRepository,
                             RoutePagingAndSortingRepository routePagingAndSortingRepository,
                             UserRepository userRepository, EmailService emailService) {
         this.routeRepository = routeRepository;
-        this.userService = userService;
-        this.carService = carService;
         this.carRepository = carRepository;
         this.addressRepository = addressRepository;
         this.routeStopRepository = routeStopRepository;
@@ -275,11 +268,11 @@ public class RouteServiceImpl implements RouteService {
     public Iterable<Route> getRoutesBetween(LocalDateTime start, LocalDateTime end, int page, SortBy sort, String name, String officeAddressId) {
         User user = this.userRepository.findByUsername(name);
         if (sort == SortBy.DATE_DESC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
         } else if (sort == SortBy.DATE_ASC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
         } else {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
         }
     }
 
@@ -367,19 +360,25 @@ public class RouteServiceImpl implements RouteService {
         User user = this.userRepository.findByUsername(name);
         if (sort == SortBy.DATE_DESC) {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
         } else if (sort == SortBy.DATE_ASC) {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+                return this.routePagingAndSortingRepository
+                        .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(
+                                start.plusHours(LocalDateTime.now().getHour()),
+                                end,
+                                false,
+                                user.getId(),
+                                PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
         } else {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start.plusHours(LocalDateTime.now().getHour()), end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
+                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start.plusHours(LocalDateTime.now().getHour()), end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE));
+            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE));
         }
     }
 

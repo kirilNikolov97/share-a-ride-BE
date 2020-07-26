@@ -187,7 +187,7 @@ public class RouteController {
         return this.routeService.getTop15RidersByRating();
     }
 
-    @RequestMapping(value = "route/sortAndFilter", method = RequestMethod.GET)
+    @RequestMapping(value = "/route/sortAndFilter", method = RequestMethod.GET)
     List<Route> getSortAndFilterRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
                                        @RequestParam String filter, @RequestParam String startDate,
                                        @RequestParam String endDate, @RequestParam Boolean officeDirection,
