@@ -7,13 +7,13 @@ import java.util.List;
 
 public interface CarService {
 
-    List<Car> getAllCarsByUser(String username);
+    List<Car> getAllByUsername(String username);
 
-    Car getCarById(String carId);
+    Car getById(String carId);
 
-    Car addNewCar(CarDto car, String name);
+    Car insert(CarDto car, String name);
 
-    Car deleteCar(String carId, String name);
+    Car delete(String carId, String name);
 
-    Car updateCar(CarDto car, String name);
+    Car update(CarDto car, String name);
 }

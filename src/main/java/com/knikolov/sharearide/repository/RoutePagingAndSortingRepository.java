@@ -7,14 +7,17 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.time.LocalDateTime;
 
+/**
+ * Repository for Route entity that includes paging and sorting functionality
+ */
 public interface RoutePagingAndSortingRepository extends PagingAndSortingRepository<Route, Integer> {
 
-    Page<Route> findAllByDateRouteAfter(LocalDateTime dateRoute, Pageable pageable);
+    // Find all routes by date greater than "dateRoute" AND Route.canceled == "canceled" AND Route.car.userId != "carUserId"
+    Page<Route> findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime dateRoute, Boolean canceled, String carUserId, Pageable pageable);
 
-    Page<Route> findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime dateRoute, Boolean canceled, String car_userId, Pageable pageable);
+    // Find all routes where Route.dateRoute is between "start" and "end" AND Route.canceled == "canceled" AND Route.car.userId != "carUserId"
+    Page<Route> findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime start, LocalDateTime end, Boolean canceled, String carUserId, Pageable pageable);
 
-    Page<Route> findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime dateRoute, LocalDateTime dateRoute2, Boolean canceled, String car_userId, Pageable pageable);
-
-    Page<Route> findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(LocalDateTime dateRoute, LocalDateTime dateRoute2, Boolean canceled, Boolean officeDirection, String car_userId, String officeAddressId, Pageable pageable);
-
+    // Find all routes where Route.dateRoute is between "start" and "end" AND Route.canceled == "canceled" AND Route.officeDirection == "officeDirection" AND Route.car.userId != "carUserId" AND Route.officeAddressId == "officeAddressId"
+    Page<Route> findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(LocalDateTime start, LocalDateTime end, Boolean canceled, Boolean officeDirection, String carUserId, String officeAddressId, Pageable pageable);
 }

@@ -6,10 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository for Car entity
+ */
 @Repository
 public interface CarRepository extends JpaRepository<Car, String> {
-
-    List<Car> findAllByUserId(String userId);
 
     List<Car> findAllByUserIdAndDeletedEquals(String userId, Boolean deleted);
 

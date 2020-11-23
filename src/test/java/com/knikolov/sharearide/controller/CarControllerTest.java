@@ -49,7 +49,7 @@ class CarControllerTest {
     @Test
     void whenGetAllCarsByUser_thenReturns200() throws Exception {
         // given
-        when(carService.getAllCarsByUser(any())).thenReturn(new ArrayList<Car>() {{ add(car); }});
+        when(carService.getAllByUsername(any())).thenReturn(new ArrayList<Car>() {{ add(car); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -69,7 +69,7 @@ class CarControllerTest {
     @Test
     void whenGetCarById_thenReturns200() throws Exception {
         // given
-        when(carService.getCarById("carId")).thenReturn(car);
+        when(carService.getById("carId")).thenReturn(car);
 
         // when
         MvcResult mvcResult = mockMvc
@@ -86,7 +86,7 @@ class CarControllerTest {
     @Test
     void whenGetCarById_thenReturns401() throws Exception {
         // given
-        when(carService.getCarById("carId")).thenReturn(car);
+        when(carService.getById("carId")).thenReturn(car);
 
         // when
         mockMvc
@@ -98,7 +98,7 @@ class CarControllerTest {
     @Test
     void whenDeleteCarById_thenReturns200() throws Exception {
         // given
-        when(carService.deleteCar("carId", "user")).thenReturn(deletedCar);
+        when(carService.delete("carId", "user")).thenReturn(deletedCar);
 
         // when
         MvcResult mvcResult = mockMvc
@@ -116,7 +116,7 @@ class CarControllerTest {
     @Test
     void whenAddNewCar_thenReturns200() throws Exception {
         // given
-        when(carService.addNewCar(any(), any())).thenReturn(car);
+        when(carService.insert(any(), any())).thenReturn(car);
 
         // when
         MvcResult mvcResult = mockMvc
@@ -134,7 +134,7 @@ class CarControllerTest {
     @Test
     void whenUpdateCar_thenReturns200() throws Exception {
         // given
-        when(carService.updateCar(any(), any())).thenReturn(car);
+        when(carService.update(any(), any())).thenReturn(car);
 
         // when
         MvcResult mvcResult = mockMvc

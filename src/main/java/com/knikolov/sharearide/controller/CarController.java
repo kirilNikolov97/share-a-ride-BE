@@ -9,6 +9,9 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Controller for Car entities
+ */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 public class CarController {
@@ -21,29 +24,29 @@ public class CarController {
 
     @RequestMapping(value = "/cars", method = RequestMethod.GET)
     List<Car> getAllCarsByUser(Principal principal) {
-        return this.carService.getAllCarsByUser(principal.getName());
+        return this.carService.getAllByUsername(principal.getName());
     }
 
     @RequestMapping(value = "/car/{carId}", method = RequestMethod.GET)
     Car getCarById(@PathVariable String carId) {
-        return carService.getCarById(carId);
+        return carService.getById(carId);
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.DELETE)
     Car deleteCarById(@RequestParam("carId") String carId, Principal principal) {
-        return carService.deleteCar(carId, principal.getName());
+        return carService.delete(carId, principal.getName());
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.POST)
     Car addNewCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);
-        return carService.addNewCar(car, principal.getName());
+        return carService.insert(car, principal.getName());
     }
 
     @RequestMapping(value = "/car", method = RequestMethod.PATCH)
     Car updateCar(@RequestBody CarDto car, Principal principal) {
         validateCar(car);
-        return carService.updateCar(car, principal.getName());
+        return carService.update(car, principal.getName());
     }
 
     private void validateCar(CarDto car) {

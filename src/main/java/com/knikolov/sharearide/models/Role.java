@@ -4,6 +4,9 @@ import com.knikolov.sharearide.enums.ERole;
 import javax.persistence.*;
 import java.util.UUID;
 
+/**
+ * Entity that holds all user roles
+ */
 @Entity
 public class Role {
 

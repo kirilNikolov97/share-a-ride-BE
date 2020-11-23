@@ -39,7 +39,7 @@ public class RouteController {
         }
 
         if ("".equals(username)) {
-            List<Route> routes = this.routeService.getAllRoutesByUserAsDriver(principal.getName(), sortByEnum);
+            List<Route> routes = this.routeService.getAllPastNotCanceledRoutesWhereUserIsDriver(principal.getName(), sortByEnum);
             if (limit == -1) {
                 return routes;
             } else if (routes.size() <= limit) {
@@ -48,7 +48,7 @@ public class RouteController {
                 return routes.subList(0, limit);
             }
         }
-        List<Route> routes = this.routeService.getAllRoutesByUserAsDriver(username, sortByEnum);
+        List<Route> routes = this.routeService.getAllPastNotCanceledRoutesWhereUserIsDriver(username, sortByEnum);
         if (limit == -1) {
             return routes;
         } else if (routes.size() <= limit) {
@@ -61,15 +61,15 @@ public class RouteController {
     @RequestMapping(value = "/futureRoutesAsDriver", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsDriver(@RequestParam String username, Principal principal) {
         if ("".equals(username)) {
-            return this.routeService.getAllFutureRoutesByUserAsDriver(principal.getName());
+            return this.routeService.getAllFutureNotCanceledRoutesWhereUserIsDriver(principal.getName());
         }
 
-        return this.routeService.getAllFutureRoutesByUserAsDriver(username);
+        return this.routeService.getAllFutureNotCanceledRoutesWhereUserIsDriver(username);
     }
 
     @RequestMapping(value = "/futureRoutesAsPassenger", method = RequestMethod.GET)
     List<Route> getFutureRoutesByUsernameAsPassenger(Principal principal) {
-        return this.routeService.getAllFutureRoutesByUserAsPassenger(principal.getName());
+        return this.routeService.getAllFutureNotCanceledRoutesWhereUserIsPassenger(principal.getName());
     }
 
     @RequestMapping(value = "/routesAsPassenger", method = RequestMethod.GET)
@@ -84,7 +84,7 @@ public class RouteController {
             sortByEnum = SortBy.NONE;
         }
 
-        List<Route> routes = this.routeService.getAllRoutesByUserAsPassenger(sortByEnum, principal.getName());
+        List<Route> routes = this.routeService.getAllPastNotCanceledRoutesWhereUserIsPassenger(sortByEnum, principal.getName());
         if (limit == -1) {
             return routes;
         } else if (routes.size() <= limit) {
@@ -96,7 +96,7 @@ public class RouteController {
 
     @RequestMapping(value = "/route/{routeId}", method = RequestMethod.GET)
     Route getRouteById(@PathVariable String routeId, @RequestParam Boolean validate, Principal principal) {
-        return this.routeService.getRouteById(routeId, validate, principal.getName());
+        return this.routeService.getById(routeId, validate, principal.getName());
     }
 
     @RequestMapping(value = "/route", method = RequestMethod.POST)
@@ -107,7 +107,7 @@ public class RouteController {
 
         // TODO: check if correct
         date = date.plusHours(3);
-        return this.routeService.addNewRoute(carId, addressId, officeDirection, date, companyAddressId, principal.getName());
+        return this.routeService.insert(carId, addressId, officeDirection, date, companyAddressId, principal.getName());
     }
 
     @RequestMapping(value = "/route", method = RequestMethod.PATCH)
@@ -116,7 +116,7 @@ public class RouteController {
                             @RequestBody LocalDateTime date, Principal principal) {
         validateRoute(carId, addressId, officeDirection, date);
 
-        return this.routeService.updateFutureRoute(carId, addressId, routeId, date, officeDirection, officeAddressId, principal.getName());
+        return this.routeService.update(carId, addressId, routeId, date, officeDirection, officeAddressId, principal.getName());
     }
 
     @RequestMapping(value = "/cancelRoute", method = RequestMethod.PATCH)
@@ -135,8 +135,7 @@ public class RouteController {
     }
 
     @RequestMapping(value = "/route/allRoutes", method = RequestMethod.GET)
-    List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy,
-                          @RequestParam String filter, Principal principal) {
+    List<Route> getRoutes(@RequestParam Integer currPage, @RequestParam String sortBy, @RequestParam String filter, Principal principal) {
         SortBy sortByEnum;
         if (sortBy.equals("date_desc")) {
             sortByEnum = SortBy.DATE_DESC;
@@ -147,7 +146,7 @@ public class RouteController {
         }
 
         List<Route> routes = new ArrayList<>();
-        this.routeService.getRoutes(currPage - 1, sortByEnum, filter, principal.getName()).forEach(routes::add);
+        this.routeService.getFutureNotCanceledRoutes(currPage - 1, sortByEnum, filter, principal.getName()).forEach(routes::add);
         return routes;
     }
 
@@ -168,18 +167,18 @@ public class RouteController {
         }
 
         List<Route> routes = new ArrayList<>();
-        this.routeService.getRoutesBetween(start, end, currPage-1, sortByEnum, principal.getName(), officeAddressId).forEach(routes::add);
+        this.routeService.getNotCanceledRoutesBetweenDatesExcludingUserRoutes(start, end, currPage-1, sortByEnum, principal.getName(), officeAddressId).forEach(routes::add);
         return routes;
     }
 
     @RequestMapping(value = "/top15Users", method = RequestMethod.GET)
     List<TopUser> getTop15Users() {
-        return this.routeService.getTop15Riders();
+        return this.routeService.getTop15RidersByNumberOfPassengers();
     }
 
     @RequestMapping(value = "/top15UsersByDrives", method = RequestMethod.GET)
     List<TopUser> getTop15UsersByDrives() {
-        return this.routeService.getTop15RidersByDrives();
+        return this.routeService.getTop15RidersByNumberOfDrives();
     }
 
     @RequestMapping(value = "/top15UsersByRating", method = RequestMethod.GET)

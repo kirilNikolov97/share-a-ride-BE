@@ -3,6 +3,9 @@ package com.knikolov.sharearide.models;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 
+/**
+ * Class that is used for id in Rating entity
+ */
 @Embeddable
 public class RatingId implements Serializable {
 

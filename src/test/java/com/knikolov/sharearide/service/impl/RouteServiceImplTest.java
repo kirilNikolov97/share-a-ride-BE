@@ -74,12 +74,12 @@ class RouteServiceImplTest {
         when(userRepository.findByUsername("username")).thenReturn(user);
         when(carRepository.findById("carId")).thenReturn(Optional.of(car));
         when(addressRepository.findById("addressId")).thenReturn(Optional.of(address));
-        when(routeRepository.findAllFutureRoutesByUserIdAsDriver(any(), any())).thenReturn(new ArrayList<>());
+        when(routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<>());
         when(routeRepository.save(any())).thenReturn(route);
         when(routeStopRepository.save(any())).thenReturn(null);
 
         // when
-        Route returned = routeService.addNewRoute("carId", "addressId", true,
+        Route returned = routeService.insert("carId", "addressId", true,
                 LocalDateTime.now(), "companyAddressId","username");
 
         // then
@@ -97,7 +97,7 @@ class RouteServiceImplTest {
 
         // when
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> routeService.addNewRoute("carId", "addressId", true, LocalDateTime.now(), "companyAddressId","notDriver"));
+                () -> routeService.insert("carId", "addressId", true, LocalDateTime.now(), "companyAddressId","notDriver"));
 
         // then
         assertEquals("Can not add new route. You are not a driver.", exception.getMessage());
@@ -109,12 +109,12 @@ class RouteServiceImplTest {
         when(userRepository.findByUsername("username")).thenReturn(user);
         when(carRepository.findById("carId")).thenReturn(Optional.of(car));
         when(addressRepository.findById("addressId")).thenReturn(Optional.of(address));
-        when(routeRepository.findAllFutureRoutesByUserIdAsDriver(any(), any()))
+        when(routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(any(), any()))
                 .thenReturn(new ArrayList<Route>() {{ add(new Route("newRoute", LocalDateTime.now(), false, true, "officeAddressId", car)); }});
 
         // when
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> routeService.addNewRoute("carId", "addressId", true, LocalDateTime.now(), "companyAddressId","username"));
+                () -> routeService.insert("carId", "addressId", true, LocalDateTime.now(), "companyAddressId","username"));
 
         // then
         assertEquals("You already have a route for this day and this direction", exception.getMessage());
@@ -132,7 +132,7 @@ class RouteServiceImplTest {
         when(routeRepository.save(any())).thenReturn(route);
 
         // when
-        Route returned = routeService.updateFutureRoute("carId", "addressId", "routeId", LocalDateTime.now(), true, "officeAddressId", "username");
+        Route returned = routeService.update("carId", "addressId", "routeId", LocalDateTime.now(), true, "officeAddressId", "username");
 
         // then
         assertEquals(route.getId(), returned.getId());
@@ -146,7 +146,7 @@ class RouteServiceImplTest {
 
         // when
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> routeService.updateFutureRoute("carId", "addressId", "routeId", LocalDateTime.now(), true, "officeAddressId", "username"));
+                () -> routeService.update("carId", "addressId", "routeId", LocalDateTime.now(), true, "officeAddressId", "username"));
 
         // then
         assertEquals("This route was not found in your profile.", exception.getMessage());
@@ -158,7 +158,7 @@ class RouteServiceImplTest {
         when(routeRepository.findById("routeId")).thenReturn(Optional.of(route));
 
         // when
-        Route returned = routeService.getRouteById("routeId", false, "username");
+        Route returned = routeService.getById("routeId", false, "username");
 
         // then
         assertEquals(route.getId(), returned.getId());
@@ -168,11 +168,11 @@ class RouteServiceImplTest {
     void whenGetRouteById_thenThrowNotFoundInProfile() {
         // given
         when(userRepository.findByUsername("username")).thenReturn(user);
-        when(routeRepository.findAllFutureRoutesByUserIdAsDriver(any(), any())).thenReturn(new ArrayList<>());
+        when(routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<>());
 
         // when
         Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> routeService.getRouteById("routeId", true, "username"));
+                () -> routeService.getById("routeId", true, "username"));
 
         // then
         assertEquals("Could not find this route in your profile", exception.getMessage());
@@ -182,7 +182,7 @@ class RouteServiceImplTest {
     void whenGetLastRoutes_thenSuccessSublist() {
         // given
         when(userRepository.findByUsername("username")).thenReturn(user);
-        when(routeRepository.findAllByOrderByIdDesc(any(), any())).thenReturn(new ArrayList<Route>() {{ add(new Route()); add(new Route());}});
+        when(routeRepository.findAllFutureRoutesExcludingInWhichUserIsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(new Route()); add(new Route());}});
 
         // when
         List<Route> routes = routeService.getLastRoutes(1, "username");
@@ -195,7 +195,7 @@ class RouteServiceImplTest {
     void whenGetLastRoutes_thenSuccess() {
         // given
         when(userRepository.findByUsername("username")).thenReturn(user);
-        when(routeRepository.findAllByOrderByIdDesc(any(), any())).thenReturn(new ArrayList<Route>() {{ add(new Route()); add(new Route());}});
+        when(routeRepository.findAllFutureRoutesExcludingInWhichUserIsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(new Route()); add(new Route());}});
 
         // when
         List<Route> routes = routeService.getLastRoutes(10, "username");
@@ -385,7 +385,7 @@ class RouteServiceImplTest {
         anotherRoute.setRouteStops(new ArrayList<RouteStop>() {{ add(routeStopAnotherUser); }});
 
         // when
-        List<TopUser> returnedList = routeService.getTop15Riders();
+        List<TopUser> returnedList = routeService.getTop15RidersByNumberOfPassengers();
 
         // then
         assertEquals(2, returnedList.size());

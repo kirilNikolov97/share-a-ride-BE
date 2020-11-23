@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Route entity
+ */
 @Entity
 public class Route implements Serializable {
 
@@ -30,7 +33,7 @@ public class Route implements Serializable {
     @JoinColumn(name = "car_id")
     private Car car;
 
-    //TODO:
+    //TODO: investigate other fetch types
     @OneToMany(mappedBy = "routeId", fetch = FetchType.EAGER)
     private List<RouteStop> routeStops;
 

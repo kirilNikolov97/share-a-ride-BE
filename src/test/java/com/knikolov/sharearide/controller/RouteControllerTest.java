@@ -61,7 +61,7 @@ class RouteControllerTest {
     @Test
     void whenGetRoutesByUsernameAsDriver_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllRoutesByUserAsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllPastNotCanceledRoutesWhereUserIsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -80,7 +80,7 @@ class RouteControllerTest {
     @Test
     void whenGetRoutesByUsernameAsDriverNoUsername_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllRoutesByUserAsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllPastNotCanceledRoutesWhereUserIsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -99,7 +99,7 @@ class RouteControllerTest {
     @Test
     void whenGetFutureRoutesByUsernameAsDriver_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllFutureRoutesByUserAsDriver(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllFutureNotCanceledRoutesWhereUserIsDriver(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -118,7 +118,7 @@ class RouteControllerTest {
     @Test
     void whenGetFutureRoutesByUsernameAsDriverNoUsername_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllFutureRoutesByUserAsDriver(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllFutureNotCanceledRoutesWhereUserIsDriver(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -137,7 +137,7 @@ class RouteControllerTest {
     @Test
     void whenGetFutureRoutesByUsernameAsPassenger_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllFutureRoutesByUserAsPassenger(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllFutureNotCanceledRoutesWhereUserIsPassenger(any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -156,7 +156,7 @@ class RouteControllerTest {
     @Test
     void whenGetRoutesByUsernameAsPassenger_thenReturns200() throws Exception {
         // given
-        when(routeService.getAllRoutesByUserAsPassenger(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getAllPastNotCanceledRoutesWhereUserIsPassenger(any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -175,7 +175,7 @@ class RouteControllerTest {
     @Test
     void whenGetRouteById_thenReturns200() throws Exception {
         // given
-        when(routeService.getRouteById(any(), any(), any())).thenReturn(route);
+        when(routeService.getById(any(), any(), any())).thenReturn(route);
 
         // when
         MvcResult mvcResult = mockMvc
@@ -195,7 +195,7 @@ class RouteControllerTest {
     @Test
     void whenAddNewRoute_thenReturns200() throws Exception {
         // given
-        when(routeService.addNewRoute(any(), any(), any(), any(), any(), any())).thenReturn(route);
+        when(routeService.insert(any(), any(), any(), any(), any(), any())).thenReturn(route);
         doNothing().when(emailService).sendTestEmail();
         LocalDateTime date = LocalDateTime.now();
 
@@ -273,7 +273,7 @@ class RouteControllerTest {
     @Test
     void whenGetRoutes_thenReturns200() throws Exception {
         // given
-        when(routeService.getRoutes(any(), any(), any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
+        when(routeService.getFutureNotCanceledRoutes(any(), any(), any(), any())).thenReturn(new ArrayList<Route>() {{ add(route); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -292,7 +292,7 @@ class RouteControllerTest {
     @Test
     void whenGetTop15Users_thenReturns200() throws Exception {
         // given
-        when(routeService.getTop15Riders()).thenReturn(new ArrayList<TopUser>() {{ add(topUser); }});
+        when(routeService.getTop15RidersByNumberOfPassengers()).thenReturn(new ArrayList<TopUser>() {{ add(topUser); }});
 
         // when
         MvcResult mvcResult = mockMvc
@@ -311,7 +311,7 @@ class RouteControllerTest {
     @Test
     void whenGetTop15UsersByDrives_thenReturns200() throws Exception {
         // given
-        when(routeService.getTop15RidersByDrives()).thenReturn(new ArrayList<TopUser>() {{ add(topUser); }});
+        when(routeService.getTop15RidersByNumberOfDrives()).thenReturn(new ArrayList<TopUser>() {{ add(topUser); }});
 
         // when
         MvcResult mvcResult = mockMvc

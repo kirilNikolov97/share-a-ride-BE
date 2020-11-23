@@ -188,8 +188,8 @@ class UserServiceImplTest {
         deletedAddress.setDeleted(true);
 
         when(userRepository.findByUsername(any())).thenReturn(user);
-        when(routeRepository.findAllFutureRoutesByUserIdAsDriver(any(), any())).thenReturn(new ArrayList<>());
-        when(routeRepository.findAllFutureRoutesByUserIdAsPassenger(any(), any())).thenReturn(new ArrayList<>());
+        when(routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<>());
+        when(routeRepository.findAllFutureRoutesByUserIdAsPassengerAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<>());
         when(userRepository.save(any())).thenReturn(user);
         when(addressRepository.save(any())).thenReturn(deletedAddress);
 
@@ -222,8 +222,8 @@ class UserServiceImplTest {
         futureRouteDriver.setRouteStops(new ArrayList<RouteStop>() {{ add(routeStop); }});
 
         when(userRepository.findByUsername(any())).thenReturn(user);
-        when(routeRepository.findAllFutureRoutesByUserIdAsDriver(any(), any())).thenReturn(new ArrayList<Route>() {{ add(futureRouteDriver); }});
-        when(routeRepository.findAllFutureRoutesByUserIdAsPassenger(any(), any())).thenReturn(new ArrayList<Route>() {{ add(futureRoutePassenger); }});
+        when(routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<Route>() {{ add(futureRouteDriver); }});
+        when(routeRepository.findAllFutureRoutesByUserIdAsPassengerAndIsNotCanceled(any(), any())).thenReturn(new ArrayList<Route>() {{ add(futureRoutePassenger); }});
 
         // when
         Exception exception = assertThrows(IllegalArgumentException.class,

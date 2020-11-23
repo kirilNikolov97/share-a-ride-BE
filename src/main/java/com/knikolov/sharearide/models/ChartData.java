@@ -2,6 +2,9 @@ package com.knikolov.sharearide.models;
 
 import java.time.LocalDate;
 
+/**
+ * Entity that holds data about statistics charts
+ */
 public class ChartData {
     private String name;
     private Integer value;

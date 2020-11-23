@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * User entity
+ */
 @Entity
 public class User implements Serializable {
 

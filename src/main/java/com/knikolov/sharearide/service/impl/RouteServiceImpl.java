@@ -19,6 +19,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * RouteService implementation
+ */
 @Service
 public class RouteServiceImpl implements RouteService {
 
@@ -30,7 +33,6 @@ public class RouteServiceImpl implements RouteService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private static int PAGE_SIZE = 5;
-
 
     public RouteServiceImpl(RouteRepository routeRepository, CarRepository carRepository,
                             AddressRepository addressRepository, RouteStopRepository routeStopRepository,
@@ -46,86 +48,85 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public List<Route> getAllRoutesByUserAsDriver(String username, SortBy sortByEnum) {
-        User user = this.userRepository.findByUsername(username);
+    public List<Route> getAllPastNotCanceledRoutesWhereUserIsDriver(String username, SortBy sortByEnum) {
+        User user = userRepository.findByUsername(username);
 
         if (sortByEnum.equals(SortBy.DATE_ASC)) {
-            return this.routeRepository.findAllPastByOrderByIdAscAsDriver(LocalDateTime.now(), user.getId());
+            return routeRepository.findAllPastOrderByIdAscAsDriverAndIsNotCanceled(LocalDateTime.now(), user.getId());
         } else if (sortByEnum.equals(SortBy.DATE_DESC)) {
-            return this.routeRepository.findAllPastByOrderByIdDescAsDriver(LocalDateTime.now(), user.getId());
+            return routeRepository.findAllPastOrderByIdDescAsDriverAndIsNotCanceled(LocalDateTime.now(), user.getId());
         } else {
-            return this.routeRepository.findAllPastByUserIdAsDriver(user, LocalDateTime.now());
+            return routeRepository.findAllPastByUserAsDriverAndIsNotCanceled(user, LocalDateTime.now());
         }
     }
 
     @Override
-    public List<Route> getAllFutureRoutesByUserAsDriver(String username) {
-        User user = this.userRepository.findByUsername(username);
-        return this.routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now());
+    public List<Route> getAllFutureNotCanceledRoutesWhereUserIsDriver(String username) {
+        User user = userRepository.findByUsername(username);
+        return routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(user, LocalDateTime.now());
     }
 
     @Override
-    public List<Route> getAllRoutesByUserAsPassenger(SortBy sortByEnum, String username) {
-        User user = this.userRepository.findByUsername(username);
+    public List<Route> getAllPastNotCanceledRoutesWhereUserIsPassenger(SortBy sortByEnum, String username) {
+        User user = userRepository.findByUsername(username);
 
         if (sortByEnum.equals(SortBy.DATE_ASC)) {
-            return this.routeRepository.findAllPastByOrderByIdAscAsPassenger(LocalDateTime.now(), user.getId());
+            return routeRepository.findAllPastOrderByIdAscAsPassengerAndIsNotCanceled(LocalDateTime.now(), user.getId());
         } else if (sortByEnum.equals(SortBy.DATE_DESC)) {
-            return this.routeRepository.findAllPastByOrderByIdDescAsPassenger(LocalDateTime.now(), user.getId());
+            return routeRepository.findAllPastOrderByIdDescAsPassengerAndIsNotCanceled(LocalDateTime.now(), user.getId());
         } else {
-            return this.routeRepository.findAllByUserIdAsPassenger(user, LocalDateTime.now());
+            return routeRepository.findAllByUserIdAsPassengerAndIsNotCanceled(user, LocalDateTime.now());
         }
     }
 
     @Override
-    public List<Route> getAllFutureRoutesByUserAsPassenger(String name) {
-        User user = this.userRepository.findByUsername(name);
-        return this.routeRepository.findAllFutureRoutesByUserIdAsPassenger(user, LocalDateTime.now());
+    public List<Route> getAllFutureNotCanceledRoutesWhereUserIsPassenger(String username) {
+        User user = userRepository.findByUsername(username);
+        return routeRepository.findAllFutureRoutesByUserIdAsPassengerAndIsNotCanceled(user, LocalDateTime.now());
     }
 
     @Override
     public List<Route> getAllRoutes() {
-        return this.routeRepository.findAll();
+        return routeRepository.findAll();
     }
 
     @Override
-    public Route addNewRoute(String carId, String addressId, Boolean officeDirection, LocalDateTime date, String companyAddressId, String username) {
-        User user = this.userRepository.findByUsername(username);
-        Car car = this.carRepository.findById(carId).orElse(null);
-        Address address = this.addressRepository.findById(addressId).orElse(null);
+    public Route insert(String carId, String addressId, Boolean officeDirection, LocalDateTime date, String companyAddressId, String username) {
+        User user = userRepository.findByUsername(username);
+        Car car = carRepository.findById(carId).orElse(null);
+        Address address = addressRepository.findById(addressId).orElse(null);
 
-        validateAddNewRoute(user, officeDirection, date);
+        if (car != null && address != null && user != null) {
+            validateInsert(user, officeDirection, date);
 
-        if (car != null && address != null) {
             Route route = new Route();
             route.setCar(car);
             route.setDateRoute(date);
             route.setRouteStops(new ArrayList<>());
             route.setOfficeDirection(officeDirection);
             route.setOfficeAddressId(companyAddressId);
-
-            Route savedRoute = this.routeRepository.save(route);
+            Route savedRoute = routeRepository.save(route);
 
             RouteStop routeStop = new RouteStop();
-            routeStop.setUserId(user);
+            routeStop.setUser(user);
             routeStop.setAddress(address);
             routeStop.setPassengerEnum(PassengerEnum.DRIVER.toString());
             routeStop.setRouteId(savedRoute.getId());
             routeStop.setApproved(true);
+            routeStopRepository.save(routeStop);
 
-            this.routeStopRepository.save(routeStop);
             return savedRoute;
         } else {
             throw new IllegalArgumentException("Something went wrong. Try again later.");
         }
     }
 
-    private void validateAddNewRoute(User user, Boolean officeDirection, LocalDateTime date) {
+    private void validateInsert(User user, Boolean officeDirection, LocalDateTime date) {
         if (!user.isDriver()) {
             throw new IllegalArgumentException("Can not add new route. You are not a driver.");
         }
 
-        List<Route> futureRoutes = this.routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now());
+        List<Route> futureRoutes = routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(user, LocalDateTime.now());
         for (Route futureRoute : futureRoutes) {
             if (futureRoute.getOfficeDirection() == officeDirection &&
                     futureRoute.getDateRoute().getYear() == date.getYear() &&
@@ -136,17 +137,14 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Route updateFutureRoute(String carId, String addressId, String routeId, LocalDateTime date,
-                                   Boolean officeDirection, String officeAddressId, String username) {
-        User user = this.userRepository.findByUsername(username);
-        if (!this.routeRepository.getOne(routeId).getCar().getUserId().equals(user.getId())) {
-            throw new IllegalArgumentException("This route was not found in your profile.");
-        }
+    public Route update(String carId, String addressId, String routeId, LocalDateTime date, Boolean officeDirection,
+                        String officeAddressId, String username) {
+        User user = userRepository.findByUsername(username);
+        validateIfRouteInProfile(routeId, user.getId());
 
-        Car car = this.carRepository.findById(carId).orElse(null);
-        Address address = this.addressRepository.findById(addressId).orElse(null);
-        Route route = this.routeRepository.findById(routeId).orElse(null);
-
+        Car car = carRepository.findById(carId).orElse(null);
+        Address address = addressRepository.findById(addressId).orElse(null);
+        Route route = routeRepository.findById(routeId).orElse(null);
 
         if (car != null && address != null && route != null) {
             route.setCar(car);
@@ -154,33 +152,41 @@ public class RouteServiceImpl implements RouteService {
             route.setOfficeDirection(officeDirection);
             route.setOfficeAddressId(officeAddressId);
 
-            RouteStop routeStop = this.routeStopRepository.findByRouteIdAndPassengerEnumEquals(routeId, PassengerEnum.DRIVER.toString());
+            RouteStop routeStop = routeStopRepository.findByRouteIdAndPassengerEnumEquals(routeId, PassengerEnum.DRIVER.toString());
             routeStop.setAddress(address);
-            this.routeStopRepository.save(routeStop);
+            routeStopRepository.save(routeStop);
 
-            return this.routeRepository.save(route);
+            return routeRepository.save(route);
         } else {
             throw new IllegalArgumentException("Something went wrong. Please try again.");
         }
     }
 
+    private void validateIfRouteInProfile(String routeId, String userId) {
+        String routeUserId = routeRepository.getOne(routeId).getCar().getUserId();
+        if (!routeUserId.equals(userId)) {
+            throw new IllegalArgumentException("This route was not found in your profile.");
+        }
+    }
+
     @Override
-    public Route getRouteById(String routeId, Boolean toValidate, String name) {
+    public Route getById(String routeId, Boolean toValidate, String username) {
         if (toValidate) {
-            User user = this.userRepository.findByUsername(name);
-            if (this.routeRepository.findAllFutureRoutesByUserIdAsDriver(user,
-                    LocalDateTime.now()).stream().filter(r -> r.getCar().getUserId().equals(user.getId())).count() == 0) {
+            User user = userRepository.findByUsername(username);
+            List<Route> routes = routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(user, LocalDateTime.now());
+            boolean routeNotFound = routes.stream().filter(r -> r.getCar().getUserId().equals(user.getId())).count() == 0;
+            if (routeNotFound) {
                 throw new IllegalArgumentException("Could not find this route in your profile");
             }
         }
 
-        return this.routeRepository.findById(routeId).orElse(null);
+        return routeRepository.findById(routeId).orElse(null);
     }
 
     @Override
-    public List<Route> getLastRoutes(Integer limit, String name) {
-        User user = this.userRepository.findByUsername(name);
-        List<Route> routes = this.routeRepository.findAllByOrderByIdDesc(LocalDateTime.now(), user.getId());
+    public List<Route> getLastRoutes(Integer limit, String username) {
+        User user = userRepository.findByUsername(username);
+        List<Route> routes = routeRepository.findAllFutureRoutesExcludingInWhichUserIsDriver(LocalDateTime.now(), user.getId());
         if (routes.size() <= limit) {
             return routes;
         } else {
@@ -189,19 +195,20 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Route cancelRoute(String routeId, String driverName) {
-        Route routeToCancel = this.routeRepository.findById(routeId).orElse(null);
-        User driver = this.userRepository.findByUsername(driverName);
+    public Route cancelRoute(String routeId, String driverUsername) {
+        Route routeToCancel = routeRepository.findById(routeId).orElse(null);
+        User driver = userRepository.findByUsername(driverUsername);
 
-        if (routeToCancel != null) {
+        if (routeToCancel != null && driver != null) {
             if (!routeToCancel.getCar().getUserId().equals(driver.getId())) {
                 throw new IllegalArgumentException("This route is not present in your profile");
             }
 
             routeToCancel.setCanceled(true);
-            Route savedRoute = this.routeRepository.save(routeToCancel);
+            Route savedRoute = routeRepository.save(routeToCancel);
 
-            this.emailService.sendEmailsForCanceledRoute(routeId, driverName);
+            emailService.sendEmailsForCanceledRoute(routeId, driverUsername);
+
             return savedRoute;
         } else {
             throw new IllegalArgumentException("Something went wrong. Try again later");
@@ -210,108 +217,108 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     public RouteStop saveSeat(String routeId, String addressId, String username) {
-        Address address = this.addressRepository.findById(addressId).orElse(null);
-        User user = this.userRepository.findByUsername(username);
-        Route route = this.routeRepository.findById(routeId).orElse(null);
+        Address address = addressRepository.findById(addressId).orElse(null);
+        User user = userRepository.findByUsername(username);
+        Route route = routeRepository.findById(routeId).orElse(null);
 
         if (address != null && user != null && route != null) {
-            if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(addressId))) {
-                throw new IllegalArgumentException("This address is not assigned to this user");
-            }
-            if (route.getDateRoute().compareTo(LocalDateTime.now()) <= 0) {
-                throw new IllegalArgumentException("This route is already passed. You can not save a seat for this route");
-            }
-            if (route.getCar().getSeats() - route.getRouteStops().size() < 1) {
-                throw new IllegalArgumentException("No free seats in the car.");
-            }
-            if (route.getCanceled()) {
-                throw new IllegalArgumentException("Route is canceled. You can not save a seat for this route");
-            }
-            if (route.getRouteStops().stream().anyMatch(rs -> rs.getPassengerEnum().equals("DRIVER") && rs.getUserId().getId().equals(user.getId()))) {
-                throw new IllegalArgumentException("You are driver for this route. Can not save a seat as a passenger");
-            }
-            if (route.getRouteStops().stream().anyMatch(rs -> rs.getUserId().getId().equals(user.getId()))) {
-                throw new IllegalArgumentException("You already saved a seat for this route.");
-            }
+            validateSaveSeat(addressId, user, route);
 
             RouteStop routeStop = new RouteStop();
-
             routeStop.setAddress(address);
-            routeStop.setPassengerEnum("PASSENGER");
+            routeStop.setPassengerEnum(PassengerEnum.PASSENGER.toString());
             routeStop.setRouteId(routeId);
-            routeStop.setUserId(user);
+            routeStop.setUser(user);
             routeStop.setApproved(false);
+            RouteStop savedRouteStop = routeStopRepository.save(routeStop);
 
-            RouteStop savedRouteStop = this.routeStopRepository.save(routeStop);
-            this.emailService.sendEmailForSavingASeat(route.getCar().getUserId(), username);
+            emailService.sendEmailForSavingASeat(route.getCar().getUserId(), username);
 
             return savedRouteStop;
-        }
-        throw new IllegalArgumentException("Something went wrong. Try again later");
-    }
-
-    @Override
-    public Iterable<Route> getRoutes(Integer page, SortBy sort, String filter, String name) {
-        User user = this.userRepository.findByUsername(name);
-        if (sort == SortBy.DATE_DESC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime.now(), false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
-        } else if (sort == SortBy.DATE_ASC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(LocalDateTime.now(), false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
         } else {
-            LocalDateTime localDateTime = LocalDateTime.now();
-            return this.routePagingAndSortingRepository.findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(localDateTime, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
+            throw new IllegalArgumentException("Something went wrong. Try again later");
         }
+    }
 
+    private void validateSaveSeat(String addressId, User user, Route route) {
+        if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(addressId))) {
+            throw new IllegalArgumentException("This address is not assigned to this user");
+        }
+        if (route.getDateRoute().compareTo(LocalDateTime.now()) <= 0) {
+            throw new IllegalArgumentException("This route is already passed. You can not save a seat for this route");
+        }
+        if (route.getCar().getSeats() - route.getRouteStops().size() < 1) {
+            throw new IllegalArgumentException("No free seats in the car.");
+        }
+        if (route.getCanceled()) {
+            throw new IllegalArgumentException("Route is canceled. You can not save a seat for this route");
+        }
+        if (route.getRouteStops().stream().anyMatch(rs -> rs.getPassengerEnum().equals("DRIVER") && rs.getUser().getId().equals(user.getId()))) {
+            throw new IllegalArgumentException("You are driver for this route. Can not save a seat as a passenger");
+        }
+        if (route.getRouteStops().stream().anyMatch(rs -> rs.getUser().getId().equals(user.getId()))) {
+            throw new IllegalArgumentException("You already saved a seat for this route.");
+        }
     }
 
     @Override
-    public Iterable<Route> getRoutesBetween(LocalDateTime start, LocalDateTime end, int page, SortBy sort, String name, String officeAddressId) {
-        User user = this.userRepository.findByUsername(name);
+    public Iterable<Route> getFutureNotCanceledRoutes(Integer page, SortBy sort, String filter, String username) {
+        LocalDateTime localDateTime = LocalDateTime.now();
+        User user = userRepository.findByUsername(username);
+        PageRequest pageRequest = getPageRequest(sort, page);
+
+        return routePagingAndSortingRepository
+                .findAllByDateRouteGreaterThanAndCanceledEqualsAndCar_UserIdIsNot(localDateTime, false, user.getId(), pageRequest);
+    }
+
+    @Override
+    public Iterable<Route> getNotCanceledRoutesBetweenDatesExcludingUserRoutes(LocalDateTime start, LocalDateTime end, int page,
+                                                                               SortBy sort, String username, String officeAddressId) {
+        User user = userRepository.findByUsername(username);
+        PageRequest pageRequest = getPageRequest(sort, page);
+        return routePagingAndSortingRepository
+                .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), pageRequest);
+    }
+
+    private PageRequest getPageRequest(SortBy sort, Integer page) {
+        PageRequest pageRequest;
+        String dateRouteField = "dateRoute";
+
         if (sort == SortBy.DATE_DESC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+            pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).descending());
         } else if (sort == SortBy.DATE_ASC) {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+            pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).ascending());
         } else {
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
+            pageRequest = PageRequest.of(page, PAGE_SIZE);
         }
+
+        return pageRequest;
     }
 
     @Override
-    public List<TopUser> getTop15Riders() {
+    public List<TopUser> getTop15RidersByNumberOfPassengers() {
         List<TopUser> topUsers = getTopUsers();
-
         Collections.sort(topUsers);
-
-        if (topUsers.size() < 15) {
-            return topUsers;
-        }
-        return topUsers.subList(0, 14);
+        return getFirst15Users(topUsers);
     }
 
     @Override
-    public List<TopUser> getTop15RidersByDrives() {
+    public List<TopUser> getTop15RidersByNumberOfDrives() {
         List<TopUser> topUsers = getTopUsers();
-
-        Comparator<TopUser> compareByDrives = (TopUser o1, TopUser o2) ->
-                o2.getNumberRides().compareTo( o1.getNumberRides() );
-
+        Comparator<TopUser> compareByDrives = (TopUser o1, TopUser o2) -> o2.getNumberRides().compareTo(o1.getNumberRides());
         topUsers.sort(compareByDrives);
-
-        if (topUsers.size() < 15) {
-            return topUsers;
-        }
-        return topUsers.subList(0, 14);
+        return getFirst15Users(topUsers);
     }
 
     @Override
     public List<TopUser> getTop15RidersByRating() {
         List<TopUser> topUsers = getTopUsers();
-
-        Comparator<TopUser> compareByDrives = (TopUser o1, TopUser o2) ->
-                o2.getRating().compareTo( o1.getRating());
-
+        Comparator<TopUser> compareByDrives = (TopUser o1, TopUser o2) -> o2.getRating().compareTo( o1.getRating());
         topUsers.sort(compareByDrives);
+        return getFirst15Users(topUsers);
+    }
 
+    private List<TopUser> getFirst15Users(List<TopUser> topUsers) {
         if (topUsers.size() < 15) {
             return topUsers;
         }
@@ -320,9 +327,9 @@ public class RouteServiceImpl implements RouteService {
 
     private List<TopUser> getTopUsers() {
         List<TopUser> topUsers = new ArrayList<>();
-        List<User> drivers = this.userRepository.findAll().stream().filter(User::isDriver).collect(Collectors.toList());
+        List<User> drivers = userRepository.findAll().stream().filter(User::isDriver).collect(Collectors.toList());
         for (User driver : drivers) {
-            List<Route> userRoutes = this.routeRepository.findAllByUserIdAsDriver(driver);
+            List<Route> userRoutes = routeRepository.findAllByUserIdAsDriver(driver);
             int passengers = getAllPassengersCount(userRoutes);
             Double rating = getRating(driver);
             topUsers.add(new TopUser(driver, userRoutes.size(), passengers, rating));
@@ -343,43 +350,49 @@ public class RouteServiceImpl implements RouteService {
     }
 
     private int getAllPassengersCount(List<Route> userRoutes) {
-        int passengers = 0;
+        int passengersCount = 0;
         for (Route userRoute : userRoutes) {
-            passengers += getPassengersInRoute(userRoute);
+            passengersCount += getNumberOfPassengersInRoute(userRoute);
         }
-
-        return passengers;
+        return passengersCount;
     }
 
-    private int getPassengersInRoute(Route route) {
+    private int getNumberOfPassengersInRoute(Route route) {
         return route.getRouteStops().size() - 1;
     }
 
     @Override
-    public Iterable<Route> sortAndFilter(LocalDateTime start, LocalDateTime end, int page, SortBy sort, Boolean officeDirection, String name, String officeAddressId) {
-        User user = this.userRepository.findByUsername(name);
+    public Iterable<Route> sortAndFilter(LocalDateTime start, LocalDateTime end, int page, SortBy sort, Boolean officeDirection,
+                                         String username, String officeAddressId) {
+        User user = userRepository.findByUsername(username);
+        PageRequest pageRequest;
+        String dateRouteField = "dateRoute";
+
         if (sort == SortBy.DATE_DESC) {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+                pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).descending());
+                return routePagingAndSortingRepository
+                        .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), pageRequest);
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").descending()));
+            pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).descending());
         } else if (sort == SortBy.DATE_ASC) {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository
-                        .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(
-                                start.plusHours(LocalDateTime.now().getHour()),
-                                end,
-                                false,
-                                user.getId(),
-                                PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+                start = start.plusHours(LocalDateTime.now().getHour());
+                pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).ascending());
+                return routePagingAndSortingRepository
+                        .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), pageRequest);
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE, Sort.by("dateRoute").ascending()));
+            pageRequest = PageRequest.of(page, PAGE_SIZE, Sort.by(dateRouteField).ascending());
         } else {
             if (officeDirection == null) {
-                return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), PageRequest.of(page, PAGE_SIZE));
+                pageRequest = PageRequest.of(page, PAGE_SIZE);
+                return routePagingAndSortingRepository
+                        .findAllByDateRouteBetweenAndCanceledEqualsAndCar_UserIdIsNot(start, end, false, user.getId(), pageRequest);
             }
-            return this.routePagingAndSortingRepository.findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end, false, officeDirection, user.getId(), officeAddressId, PageRequest.of(page, PAGE_SIZE));
+            pageRequest = PageRequest.of(page, PAGE_SIZE);
         }
+        return routePagingAndSortingRepository
+                .findAllByDateRouteBetweenAndCanceledEqualsAndOfficeDirectionEqualsAndCar_UserIdIsNotAndOfficeAddressIdEquals(start, end,
+                        false, officeDirection, user.getId(), officeAddressId, pageRequest);
     }
-
 }

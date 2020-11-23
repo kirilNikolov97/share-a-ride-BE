@@ -57,7 +57,7 @@ class CarServiceImplTest {
         when(carRepository.findById(any())).thenReturn(Optional.of(car));
 
         // when
-        Car found = carService.getCarById("carId");
+        Car found = carService.getById("carId");
 
         // then
         assertEquals("carId", found.getId());
@@ -71,7 +71,7 @@ class CarServiceImplTest {
         when(carRepository.save(any())).thenReturn(updatedCar);
 
         // when
-        Car returned = carService.updateCar(carDto, "username");
+        Car returned = carService.update(carDto, "username");
 
         // then
         assertEquals(updatedCar.getId(), returned.getId());
@@ -83,7 +83,7 @@ class CarServiceImplTest {
         when(userRepository.findByUsername("notdriver")).thenReturn(notDriver);
 
         // when
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.updateCar(carDto, "notdriver"));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.update(carDto, "notdriver"));
 
         // then
         assertEquals("You are not a driver.", exception.getMessage());
@@ -96,7 +96,7 @@ class CarServiceImplTest {
         when(carRepository.findById(any())).thenReturn(Optional.ofNullable(null));
 
         // when
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.updateCar(carDto, "username"));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.update(carDto, "username"));
 
         // then
         assertEquals("Car is not present in your profile.", exception.getMessage());
@@ -111,7 +111,7 @@ class CarServiceImplTest {
         when(carRepository.save(any())).thenReturn(deletedCar);
 
         // when
-        Car returned = carService.deleteCar("carId", "username");
+        Car returned = carService.delete("carId", "username");
 
         // then
         assertTrue(returned.getDeleted());
@@ -124,7 +124,7 @@ class CarServiceImplTest {
         when(carRepository.findById(any())).thenReturn(Optional.ofNullable(null));
 
         // when
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.deleteCar("carId", "username"));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.delete("carId", "username"));
 
         // then
         assertEquals("This car is not available.", exception.getMessage());
@@ -139,7 +139,7 @@ class CarServiceImplTest {
         when(carRepository.findById(any())).thenReturn(Optional.of(someoneElsesCar));
 
         // when
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.deleteCar("carId", "username"));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.delete("carId", "username"));
 
         // then
         assertEquals("Could not find this car in your profile.", exception.getMessage());
@@ -153,7 +153,7 @@ class CarServiceImplTest {
         when(routeRepository.findAllByCarIdAndDateRouteAfterAndCanceledEquals(any(), any(), any())).thenReturn(new ArrayList<Route>() {{ add(new Route()); }});
 
         // when
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.deleteCar("carId", "username"));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> carService.delete("carId", "username"));
 
         // then
         assertEquals("The car is assigned to future route. Change the car for the route first and then delete this car", exception.getMessage());

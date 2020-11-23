@@ -68,7 +68,7 @@ public class EmailService {
         if (route != null) {
             List<RouteStop> routeStops = route.getRouteStops();
             for (RouteStop rs : routeStops) {
-                sendEmailForCanceledRoute(rs.getUserId().getEmail(), driver);
+                sendEmailForCanceledRoute(rs.getUser().getEmail(), driver);
             }
         }
 

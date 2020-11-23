@@ -5,6 +5,9 @@ import org.hibernate.validator.constraints.Length;
 import javax.persistence.*;
 import java.util.UUID;
 
+/**
+ * Address entity
+ */
 @Entity
 public class Address {
 

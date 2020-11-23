@@ -3,6 +3,9 @@ package com.knikolov.sharearide.models;
 import javax.persistence.*;
 import java.util.UUID;
 
+/**
+ * Route stop entity. This entity holds information about every stop for every route
+ */
 @Entity
 public class RouteStop {
 
@@ -19,7 +22,7 @@ public class RouteStop {
 
     @ManyToOne
     @JoinColumn(name="passenger_id")
-    private User userId;
+    private User user;
 
     @Column(name = "passenger_enum")
     private String passengerEnum;
@@ -31,11 +34,11 @@ public class RouteStop {
         this.id = UUID.randomUUID().toString();
     }
 
-    public RouteStop(String id, String routeId, Address addressId, User userId, String passengerEnum, Boolean isApproved) {
+    public RouteStop(String id, String routeId, Address addressId, User user, String passengerEnum, Boolean isApproved) {
         this.id = id;
         this.routeId = routeId;
         this.addressId = addressId;
-        this.userId = userId;
+        this.user = user;
         this.passengerEnum = passengerEnum;
         this.isApproved = isApproved;
     }
@@ -60,12 +63,12 @@ public class RouteStop {
         this.addressId = addressId;
     }
 
-    public User getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(User userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getPassengerEnum() {

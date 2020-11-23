@@ -4,17 +4,11 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * Entity that holds ratings that one user gives to another one
+ */
 @Entity
 public class Rating implements Serializable {
-
-//    @Id
-//    @Column(name = "driver_id")
-//    private String driverId;
-//
-//    @Id
-//    @Column(name = "passenger_id")
-//    private String passengerId;
-
 
     @EmbeddedId
     private RatingId ratingId;
@@ -25,8 +19,7 @@ public class Rating implements Serializable {
     @Column(name = "date_rating")
     private LocalDateTime dateRating;
 
-    public Rating() {
-    }
+    public Rating() {}
 
     public Rating(RatingId ratingId, Integer rate, LocalDateTime dateRating) {
         this.ratingId = ratingId;

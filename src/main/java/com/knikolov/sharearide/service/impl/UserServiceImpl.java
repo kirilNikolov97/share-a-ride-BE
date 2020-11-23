@@ -166,8 +166,8 @@ public class UserServiceImpl implements UserService {
 
         Address deletedAddress = addresses.get(toBeDeleted);
 
-        List<Route> futureRoutes = routeRepository.findAllFutureRoutesByUserIdAsDriver(user, LocalDateTime.now());
-        futureRoutes.addAll(routeRepository.findAllFutureRoutesByUserIdAsPassenger(user, LocalDateTime.now()));
+        List<Route> futureRoutes = routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(user, LocalDateTime.now());
+        futureRoutes.addAll(routeRepository.findAllFutureRoutesByUserIdAsPassengerAndIsNotCanceled(user, LocalDateTime.now()));
 
         if (futureRoutes.size() > 0) {
             for (int i = 0; i < futureRoutes.size(); i++) {
@@ -226,13 +226,13 @@ public class UserServiceImpl implements UserService {
         RouteStop routeStop = this.routeStopRepository.getOne(routeStopId);
         if (!approved) {
             this.routeStopRepository.delete(routeStop);
-            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUserId().getEmail(), driverUsername, false);
+            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, false);
             return null;
         } else {
             routeStop.setApproved(true);
 
             RouteStop saved = this.routeStopRepository.save(routeStop);
-            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUserId().getEmail(), driverUsername, true);
+            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, true);
             return saved;
         }
     }
@@ -296,7 +296,7 @@ public class UserServiceImpl implements UserService {
         RouteStop rsToDelete = this.routeStopRepository.findById(routeStopId).orElse(null);
 
         if (rsToDelete != null) {
-            if (!rsToDelete.getUserId().getUsername().equals(name)) {
+            if (!rsToDelete.getUser().getUsername().equals(name)) {
                 throw new IllegalArgumentException("Could not find this route stop in your profile.");
             }
             Route route = this.routeRepository.findById(rsToDelete.getRouteId()).orElse(null);
@@ -308,7 +308,7 @@ public class UserServiceImpl implements UserService {
             }
 
             this.routeStopRepository.delete(rsToDelete);
-            this.emailService.sendEmailForDeletedRouteStop(rsToDelete.getUserId().getEmail());
+            this.emailService.sendEmailForDeletedRouteStop(rsToDelete.getUser().getEmail());
             return rsToDelete;
         } else {
             throw new IllegalArgumentException("Something went wrong. Try again later.");
@@ -382,8 +382,8 @@ public class UserServiceImpl implements UserService {
 
         User toBeBlocked = this.userRepository.findById(userId).orElse(null);
         toBeBlocked.setBlocked(true);
-        List<Route> routes = this.routeRepository.findAllFutureRoutesByUserIdAsDriver(toBeBlocked, LocalDateTime.now());
-        List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumAndUserIdEquals(PassengerEnum.PASSENGER.toString(), toBeBlocked);
+        List<Route> routes = this.routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(toBeBlocked, LocalDateTime.now());
+        List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumAndUserEquals(PassengerEnum.PASSENGER.toString(), toBeBlocked);
 
         for (Route route : routes) {
             this.cancelRoute(route.getId(), toBeBlocked.getUsername());

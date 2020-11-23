@@ -5,6 +5,9 @@ import org.hibernate.validator.constraints.Length;
 import javax.persistence.*;
 import java.util.UUID;
 
+/**
+ * Car entity
+ */
 @Entity
 public class Car {
 

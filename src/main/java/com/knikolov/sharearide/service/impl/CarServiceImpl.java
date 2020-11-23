@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * CarService implementation
+ */
 @Service
 public class CarServiceImpl implements CarService {
 
@@ -27,88 +30,88 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public List<Car> getAllCarsByUser(String username) {
-        User user = this.userRepository.findByUsername(username);
-        return this.carRepository.findAllByUserIdAndDeletedEquals(user.getId(), false);
+    public List<Car> getAllByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        return carRepository.findAllByUserIdAndDeletedEquals(user.getId(), false);
     }
 
     @Override
-    public Car getCarById(String carId) {
-        return this.carRepository.findById(carId).orElse(null);
+    public Car getById(String carId) {
+        return carRepository.findById(carId).orElse(null);
     }
 
     @Override
-    public Car addNewCar(CarDto car, String username) {
-        User user = this.userRepository.findByUsername(username);
-        validateIfDriver(user);
+    public Car insert(CarDto carDto, String username) {
+        User user = userRepository.findByUsername(username);
+        validateUser(user);
 
-        Car newCar = new Car();
+        Car car = new Car();
+        car.setId(UUID.randomUUID().toString());
+        car.setUserId(user.getId());
+        car.setManufacturer(carDto.getManufacturer());
+        car.setModel(carDto.getModel());
+        car.setSeats(carDto.getSeats());
+        car.setColor(carDto.getColor());
+        car.setYear(carDto.getYear());
+        car.setDeleted(false);
 
         try {
-            newCar.setId(UUID.randomUUID().toString());
-            newCar.setUserId(user.getId());
-            newCar.setManufacturer(car.getManufacturer());
-            newCar.setModel(car.getModel());
-            newCar.setSeats(car.getSeats());
-            newCar.setColor(car.getColor());
-            newCar.setYear(car.getYear());
-            newCar.setDeleted(false);
-
-            return this.carRepository.save(newCar);
+            return carRepository.save(car);
         } catch (Exception e) {
             throw new IllegalArgumentException("Something went wrong. Please try again later.");
         }
     }
 
     @Override
-    public Car updateCar(CarDto car, String name) {
-        User user = this.userRepository.findByUsername(name);
-        validateIfDriver(user);
+    public Car update(CarDto carDto, String username) {
+        User user = userRepository.findByUsername(username);
+        validateUser(user);
 
-        Car carToUpdate = this.carRepository.findById(car.getId()).orElse(null);
+        Car car = carRepository.findById(carDto.getId()).orElse(null);
+        if (car != null && carDto.getUserId().equals(user.getId())) {
+            car.setManufacturer(carDto.getManufacturer());
+            car.setModel(carDto.getModel());
+            car.setColor(carDto.getColor());
+            car.setSeats(carDto.getSeats());
+            car.setYear(carDto.getYear());
 
-        if(carToUpdate != null && car.getUserId().equals(user.getId())) {
             try {
-                carToUpdate.setManufacturer(car.getManufacturer());
-                carToUpdate.setModel(car.getModel());
-                carToUpdate.setColor(car.getColor());
-                carToUpdate.setSeats(car.getSeats());
-                carToUpdate.setYear(car.getYear());
-
-                return this.carRepository.save(carToUpdate);
+                return carRepository.save(car);
             } catch (Exception e) {
                 throw new IllegalArgumentException("Something went wrong. Please try again later");
             }
         } else {
             throw new IllegalArgumentException("Car is not present in your profile.");
         }
-
     }
 
     @Override
-    public Car deleteCar(String carId, String name) {
-        User user = this.userRepository.findByUsername(name);
-        validateIfDriver(user);
-        Car carToDelete = this.carRepository.findById(carId).orElse(null);
+    public Car delete(String carId, String username) {
+        User user = userRepository.findByUsername(username);
+        validateUser(user);
 
-        if (carToDelete == null) {
+        Car car = carRepository.findById(carId).orElse(null);
+        if (car == null) {
             throw new IllegalArgumentException("This car is not available.");
         }
-        if (!carToDelete.getUserId().equals(user.getId())) {
+        if (!car.getUserId().equals(user.getId())) {
             throw new IllegalArgumentException("Could not find this car in your profile.");
         }
         if (routeRepository.findAllByCarIdAndDateRouteAfterAndCanceledEquals(carId, LocalDateTime.now(), false).size() > 0) {
             throw new IllegalArgumentException("The car is assigned to future route. Change the car for the route first and then delete this car");
         }
 
-        carToDelete.setDeleted(true);
-        return this.carRepository.save(carToDelete);
+        car.setDeleted(true);
+        try {
+            return carRepository.save(car);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Something went wrong. Please try again later.");
+        }
     }
 
-    private void validateIfDriver(User user) {
+    private void validateUser(User user) {
         if (!user.isDriver()) {
             throw new IllegalArgumentException("You are not a driver.");
         }
     }
-
 }

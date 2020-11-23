@@ -2,6 +2,9 @@ package com.knikolov.sharearide.dto;
 
 import com.knikolov.sharearide.models.User;
 
+/**
+ * Class that represents Top Users compared by passengers number
+ */
 public class TopUser implements Comparable<TopUser>{
 
     private User user;
