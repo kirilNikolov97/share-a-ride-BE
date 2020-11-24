@@ -52,9 +52,4 @@ public class JwtUtils {
         return false;
     }
 
-    public void expireJwtToken() {
-
-    }
-
-
 }

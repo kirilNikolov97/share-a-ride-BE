@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * DTO for User entity
+ */
 public class UserDto {
 
     private String id;

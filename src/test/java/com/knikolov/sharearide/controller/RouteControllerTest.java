@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
-import com.knikolov.sharearide.service.EmailService;
+import com.knikolov.sharearide.service.impl.EmailService;
 import com.knikolov.sharearide.service.impl.RouteServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;

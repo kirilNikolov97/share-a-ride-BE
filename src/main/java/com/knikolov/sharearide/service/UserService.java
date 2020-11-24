@@ -8,11 +8,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Service interface for User actions
+ */
 public interface UserService {
 
-    User getUserByUsername(String username);
+    User getByUsername(String username);
 
-    User updateUser(UserDto userDto);
+    User update(UserDto userDto);
 
     String uploadPicture(MultipartFile file, String username);
 
@@ -20,7 +23,7 @@ public interface UserService {
 
     Address getAddressById(String addressId, String username);
 
-    Address addNewAddress(AddressDto addressDto, String username);
+    Address createAddress(AddressDto addressDto, String username);
 
     Address updateAddress(AddressDto address, String username);
 
@@ -36,7 +39,7 @@ public interface UserService {
 
     RouteStop getRouteStopById(String routeStopId);
 
-    User getUserById(String userId);
+    User getById(String userId);
 
     Rating rateUser(String userId, Integer rating, String passengerUsername);
 
@@ -50,7 +53,7 @@ public interface UserService {
 
     List<UserDto> searchByUsername(String username);
 
-    List<UserDto> searchNotBlockedByUsername(String username);
+    List<UserDto> searchNonBlockedByUsername(String username);
 
     User blockUser(String userId, String name);
 

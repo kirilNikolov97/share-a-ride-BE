@@ -1,5 +1,8 @@
 package com.knikolov.sharearide.payload;
 
+/**
+ * Class that represents Message response
+ */
 public class MessageResponse {
     private String message;
 

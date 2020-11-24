@@ -8,7 +8,6 @@ import com.knikolov.sharearide.dto.UserDto;
 import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
-import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +19,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * UserService implementation
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -30,12 +32,12 @@ public class UserServiceImpl implements UserService {
     private final RouteRepository routeRepository;
     private final EmailService emailService;
     private final Cloudinary cloudinary;
-
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     public UserServiceImpl(UserRepository userRepository, AddressRepository addressRepository,
                            RouteStopRepository routeStopRepository, RatingRepository ratingRepository,
-                           RouteRepository routeRepository, EmailService emailService, Cloudinary cloudinary, PasswordEncoder passwordEncoder) {
+                           RouteRepository routeRepository, EmailService emailService,
+                           Cloudinary cloudinary, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.routeStopRepository = routeStopRepository;
@@ -47,21 +49,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByUsername(String username) {
+    public User getByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
     @Override
-    public User updateUser(UserDto userDto) {
+    public User update(UserDto userDto) {
         User user = userDtoToUser(userDto);
 
-        User dbUser = this.userRepository.findByUsername(user.getUsername());
+        User dbUser = userRepository.findByUsername(user.getUsername());
         user.setPassword(dbUser.getPassword());
         user.setPictureUrl(dbUser.getPictureUrl());
 
         try {
-            user.setPictureUrl(dbUser.getPictureUrl());
-            return this.userRepository.save(user);
+            return userRepository.save(user);
         } catch (Exception e) {
             if (e.getMessage().contains("email")) {
                 throw new IllegalArgumentException("Email is already taken.");
@@ -73,12 +74,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String uploadPicture(MultipartFile file, String username) {
-        User user = this.userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
         try {
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
             String url = (String) uploadResult.get("url");
             user.setPictureUrl(url);
-            this.userRepository.save(user);
+            userRepository.save(user);
             return "Success";
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,8 +89,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Address> getAddressesByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .getAddresses().stream().filter(address -> !address.getDeleted()).collect(Collectors.toList());
+        return userRepository.findByUsername(username).getAddresses().stream()
+                .filter(address -> !address.getDeleted())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -98,24 +100,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Address addNewAddress(AddressDto addressDto, String username) {
+    public Address createAddress(AddressDto addressDto, String username) {
         User user = userRepository.findByUsername(username);
         List<Address> addresses = user.getAddresses();
 
         Address newAddress = new Address();
+        newAddress.setId(UUID.randomUUID().toString());
+        newAddress.setDistrict(addressDto.getDistrict());
+        newAddress.setStreet(addressDto.getStreet());
+        newAddress.setAdditionalInfo(addressDto.getAdditionalInfo());
+        newAddress.setLongitude(addressDto.getLongitude());
+        newAddress.setLatitude(addressDto.getLatitude());
+        newAddress.setDeleted(false);
+        addresses.add(newAddress);
+        user.setAddresses(addresses);
+
         try {
-            newAddress.setId(UUID.randomUUID().toString());
-            newAddress.setDistrict(addressDto.getDistrict());
-            newAddress.setStreet(addressDto.getStreet());
-            newAddress.setAdditionalInfo(addressDto.getAdditionalInfo());
-            newAddress.setLongitude(addressDto.getLongitude());
-            newAddress.setLatitude(addressDto.getLatitude());
-            newAddress.setDeleted(false);
-
-            addresses.add(newAddress);
-            user.setAddresses(addresses);
-            this.userRepository.save(user);
-
+            userRepository.save(user);
             return newAddress;
         } catch (TransactionSystemException constraintException) {
             throw new IllegalArgumentException("Something went wrong. Try again later.");
@@ -124,22 +125,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Address updateAddress(AddressDto address, String username) {
-        Address currentAddress = this.addressRepository.findById(address.getId()).orElse(null);
-        User user = this.userRepository.findByUsername(username);
+        Address currentAddress = addressRepository.findById(address.getId()).orElse(null);
+        User user = userRepository.findByUsername(username);
+
         if (user.getAddresses().stream().noneMatch(addrs -> addrs.getId().equals(address.getId()))) {
             throw new IllegalArgumentException("This address can not be found in your profile.");
         }
 
         if (currentAddress != null) {
-            try {
-                currentAddress.setDistrict(address.getDistrict());
-                currentAddress.setStreet(address.getStreet());
-                currentAddress.setAdditionalInfo(address.getAdditionalInfo());
-                currentAddress.setLatitude(address.getLatitude());
-                currentAddress.setLongitude(address.getLongitude());
-                currentAddress.setDeleted(false);
+            currentAddress.setDistrict(address.getDistrict());
+            currentAddress.setStreet(address.getStreet());
+            currentAddress.setAdditionalInfo(address.getAdditionalInfo());
+            currentAddress.setLatitude(address.getLatitude());
+            currentAddress.setLongitude(address.getLongitude());
+            currentAddress.setDeleted(false);
 
-                return this.addressRepository.save(currentAddress);
+            try {
+                return addressRepository.save(currentAddress);
             } catch (Exception e) {
                 throw new IllegalArgumentException("Something went wrong. Try again later.");
             }
@@ -150,64 +152,80 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Address deleteAddress(String addressId, String username) {
-        User user = this.userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
         List<Address> addresses = user.getAddresses();
 
-        int toBeDeleted = -1;
-        for (int i = 0; i < addresses.size(); i++) {
-            if (addresses.get(i).getId().equals(addressId)) {
-                toBeDeleted = i;
-            }
-        }
-
-        if (toBeDeleted == -1) {
-            throw new IllegalArgumentException("No such address in your profile");
-        }
-
-        Address deletedAddress = addresses.get(toBeDeleted);
+        int toBeDeletedIndex = getToBeDeletedIndex(addressId, addresses);
 
         List<Route> futureRoutes = routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(user, LocalDateTime.now());
         futureRoutes.addAll(routeRepository.findAllFutureRoutesByUserIdAsPassengerAndIsNotCanceled(user, LocalDateTime.now()));
 
+        Address deletedAddress = addresses.get(toBeDeletedIndex);
+        checkIfAddressAssignedToFutureRoute(deletedAddress, futureRoutes);
+
+        addresses.get(toBeDeletedIndex).setDeleted(true);
+        user.setAddresses(addresses);
+        userRepository.save(user);
+
+        deletedAddress.setDeleted(true);
+        return addressRepository.save(deletedAddress);
+    }
+
+    private int getToBeDeletedIndex(String addressId, List<Address> addresses) {
+        int toBeDeletedIndex = -1;
+        for (int i = 0; i < addresses.size(); i++) {
+            if (addresses.get(i).getId().equals(addressId)) {
+                toBeDeletedIndex = i;
+            }
+        }
+
+        if (toBeDeletedIndex == -1) {
+            throw new IllegalArgumentException("No such address in your profile");
+        }
+
+        return toBeDeletedIndex;
+    }
+
+    private void checkIfAddressAssignedToFutureRoute(Address deletedAddress, List<Route> futureRoutes) {
         if (futureRoutes.size() > 0) {
-            for (int i = 0; i < futureRoutes.size(); i++) {
-                if (futureRoutes.get(i).getRouteStops().stream().filter(rs -> {
+            for (Route futureRoute : futureRoutes) {
+                if (futureRoute.getRouteStops().stream().filter(rs -> {
                     if (rs.getAddress().getId().equals(deletedAddress.getId())) {
                         return true;
                     }
                     return false;
                 }).count() > 0) {
-                    throw new IllegalArgumentException("The address is assigned to future route. Change the address for the route and then delete this address");
+                    throw new IllegalArgumentException("The address is assigned to future route." +
+                            " Change the address for the route and then delete this address");
                 }
             }
         }
-
-        deletedAddress.setDeleted(true);
-
-        addresses.get(toBeDeleted).setDeleted(true);
-        user.setAddresses(addresses);
-        this.userRepository.save(user);
-
-        return this.addressRepository.save(deletedAddress);
     }
 
     @Override
-    public User becomeDriver(String name) {
-        User currentUser = this.userRepository.findByUsername(name);
+    public User becomeDriver(String username) {
+        User currentUser = userRepository.findByUsername(username);
         currentUser.setDriver(true);
-        return this.userRepository.save(currentUser);
+        return userRepository.save(currentUser);
     }
 
     @Override
     public User getCompany(String username) {
-        User user = this.userRepository.findByUsername(username);
-        return this.userRepository.findById(user.getCompanyId()).orElse(null);
+        User user = userRepository.findByUsername(username);
+        return userRepository.findById(user.getCompanyId()).orElse(null);
     }
 
     @Override
     public Boolean changePassword(PasswordChange passwordChange, String username) {
-        User user = this.userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
+        validateChangePassword(passwordChange, user);
 
+        user.setPassword(passwordEncoder.encode(passwordChange.getNewPassword()));
+        userRepository.save(user);
+        return true;
+    }
+
+    private void validateChangePassword(PasswordChange passwordChange, User user) {
         if (!passwordEncoder.matches(passwordChange.getOldPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Old password is not correct!");
         }
@@ -215,57 +233,56 @@ public class UserServiceImpl implements UserService {
         if (passwordEncoder.matches(passwordChange.getNewPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Your new password cannot be the same as your old password! Choose another password!");
         }
-
-        user.setPassword(passwordEncoder.encode(passwordChange.getNewPassword()));
-        this.userRepository.save(user);
-        return true;
     }
 
     @Override
     public RouteStop approveOrDeclineRoute(String routeStopId, String driverUsername, boolean approved) {
-        RouteStop routeStop = this.routeStopRepository.getOne(routeStopId);
+        RouteStop routeStop = routeStopRepository.getOne(routeStopId);
         if (!approved) {
-            this.routeStopRepository.delete(routeStop);
-            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, false);
+            routeStopRepository.delete(routeStop);
+            emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, false);
             return null;
         } else {
             routeStop.setApproved(true);
-
-            RouteStop saved = this.routeStopRepository.save(routeStop);
-            this.emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, true);
+            RouteStop saved = routeStopRepository.save(routeStop);
+            emailService.sendEmailResponseForSavedSeat(routeStop.getUser().getEmail(), driverUsername, true);
             return saved;
         }
     }
 
     @Override
     public RouteStop getRouteStopById(String routeStopId) {
-        return this.routeStopRepository.findById(routeStopId).orElse(null);
+        return routeStopRepository.findById(routeStopId).orElse(null);
     }
 
     @Override
-    public User getUserById(String userId) {
-        return this.userRepository.findById(userId).orElse(null);
+    public User getById(String userId) {
+        return userRepository.findById(userId).orElse(null);
     }
 
    @Override
     public Rating rateUser(String userId, Integer rating, String passengerUsername) {
-        User passenger = this.userRepository.findByUsername(passengerUsername);
+        User passenger = userRepository.findByUsername(passengerUsername);
 
-        List<String> driverRouteIds = this.routeStopRepository.findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("DRIVER", userId);
-        List<String> passengerRouteIds = this.routeStopRepository.findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("PASSENGER", passenger.getId());
+        List<String> driverRouteIds = routeStopRepository.findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("DRIVER", userId);
+        List<String> passengerRouteIds = routeStopRepository.findAllRouteIdsByPassengerEnumEqualsAndUserIdEquals("PASSENGER", passenger.getId());
 
-        boolean isNoCommonElements = Collections.disjoint(driverRouteIds, passengerRouteIds);
-
-        if (isNoCommonElements) {
-            throw new IllegalArgumentException("The driver never drove this passenger!");
-        }
+        validateRateUser(driverRouteIds, passengerRouteIds);
 
         Rating newRating = new Rating();
         newRating.setRatingId(new RatingId(userId, passenger.getId()));
         newRating.setDateRating(LocalDateTime.now());
         newRating.setRate(rating);
 
-        return this.ratingRepository.save(newRating);
+        return ratingRepository.save(newRating);
+    }
+
+    private void validateRateUser(List<String> driverRouteIds, List<String> passengerRouteIds) {
+        boolean isNoCommonElements = Collections.disjoint(driverRouteIds, passengerRouteIds);
+
+        if (isNoCommonElements) {
+            throw new IllegalArgumentException("The driver never drove this passenger!");
+        }
     }
 
     @Override
@@ -293,39 +310,43 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public RouteStop deleteRouteStopById(String routeStopId, String name) {
-        RouteStop rsToDelete = this.routeStopRepository.findById(routeStopId).orElse(null);
+        RouteStop rsToDelete = routeStopRepository.findById(routeStopId).orElse(null);
 
         if (rsToDelete != null) {
-            if (!rsToDelete.getUser().getUsername().equals(name)) {
-                throw new IllegalArgumentException("Could not find this route stop in your profile.");
-            }
-            Route route = this.routeRepository.findById(rsToDelete.getRouteId()).orElse(null);
-            if (route == null) {
-                throw new IllegalArgumentException("Route is not present");
-            }
-            if (route.getDateRoute().compareTo(LocalDateTime.now()) < 0) {
-                throw new IllegalArgumentException("Route already passed. Can not delete route stop");
-            }
+            validateDeleteRouteStopById(name, rsToDelete);
 
-            this.routeStopRepository.delete(rsToDelete);
-            this.emailService.sendEmailForDeletedRouteStop(rsToDelete.getUser().getEmail());
+            routeStopRepository.delete(rsToDelete);
+            emailService.sendEmailForDeletedRouteStop(rsToDelete.getUser().getEmail());
             return rsToDelete;
         } else {
             throw new IllegalArgumentException("Something went wrong. Try again later.");
         }
     }
 
+    private void validateDeleteRouteStopById(String name, RouteStop rsToDelete) {
+        if (!rsToDelete.getUser().getUsername().equals(name)) {
+            throw new IllegalArgumentException("Could not find this route stop in your profile.");
+        }
+        Route route = routeRepository.findById(rsToDelete.getRouteId()).orElse(null);
+        if (route == null) {
+            throw new IllegalArgumentException("Route is not present");
+        }
+        if (route.getDateRoute().compareTo(LocalDateTime.now()) < 0) {
+            throw new IllegalArgumentException("Route already passed. Can not delete route stop");
+        }
+    }
+
     @Override
     public Integer countByDriverTrue() {
-        return this.userRepository.findAllByDriverEqualsTrue().size();
+        return userRepository.findAllByDriverEqualsTrue().size();
     }
 
     @Override
     public Integer countByDriverFalse() {
-        return this.userRepository.findAllByDriverEqualsFalse().size();
+        return userRepository.findAllByDriverEqualsFalse().size();
     }
 
-    public User userDtoToUser(UserDto userDto) {
+    private User userDtoToUser(UserDto userDto) {
         User user = new User();
         user.setId(userDto.getId());
         user.setUsername(userDto.getUsername());
@@ -348,21 +369,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> searchByUsername(String username) {
-        List<User> users = this.userRepository.findAllByUsernameContains(username);
-        List<UserDto> usersDtos = new ArrayList<>();
-
-        for (User u : users) {
-            UserDto dto = userToUserDto(u);
-            usersDtos.add(dto);
-        }
-        return usersDtos;
+        List<User> users = userRepository.findAllByUsernameContains(username);
+        return getUserDtos(users);
     }
 
     @Override
-    public List<UserDto> searchNotBlockedByUsername(String username) {
-        List<User> users = this.userRepository.findAllByUsernameContainsAndIsBlockedEquals(username, false);
-        List<UserDto> usersDtos = new ArrayList<>();
+    public List<UserDto> searchNonBlockedByUsername(String username) {
+        List<User> users = userRepository.findAllByUsernameContainsAndIsBlockedEquals(username, false);
+        return getUserDtos(users);
+    }
 
+    private List<UserDto> getUserDtos(List<User> users) {
+        List<UserDto> usersDtos = new ArrayList<>();
         for (User u : users) {
             UserDto dto = userToUserDto(u);
             usersDtos.add(dto);
@@ -372,62 +390,81 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User blockUser(String userId, String username) {
-        User user = this.userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
+        validateBlockUser(userId, user);
 
+        User toBeBlocked = userRepository.findById(userId).orElse(null);
+        if (toBeBlocked != null) {
+            toBeBlocked.setBlocked(true);
+            List<Route> routes = routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(toBeBlocked, LocalDateTime.now());
+            List<RouteStop> routeStops = routeStopRepository.findAllByPassengerEnumAndUserEquals(PassengerEnum.PASSENGER.toString(), toBeBlocked);
+
+            for (Route route : routes) {
+                cancelRoute(route.getId(), toBeBlocked.getUsername());
+            }
+            for (RouteStop routeStop : routeStops) {
+                Route route = routeRepository.findById(routeStop.getRouteId()).orElse(null);
+                if (route.getDateRoute().compareTo(LocalDateTime.now()) > 0) {
+                    deleteRouteStopById(routeStop.getId(), toBeBlocked.getUsername());
+                }
+            }
+            return userRepository.save(toBeBlocked);
+        } else {
+            throw new IllegalArgumentException("Something went wrong.");
+        }
+
+    }
+
+    private void validateBlockUser(String userId, User user) {
         if (!user.getCompany()) {
             throw new IllegalArgumentException("You have no rights to block the user");
         } else if (user.getId().equals(userId)) {
             throw new IllegalArgumentException("You can not block yourself");
         }
-
-        User toBeBlocked = this.userRepository.findById(userId).orElse(null);
-        toBeBlocked.setBlocked(true);
-        List<Route> routes = this.routeRepository.findAllFutureRoutesByUserIdAsDriverAndIsNotCanceled(toBeBlocked, LocalDateTime.now());
-        List<RouteStop> routeStops = this.routeStopRepository.findAllByPassengerEnumAndUserEquals(PassengerEnum.PASSENGER.toString(), toBeBlocked);
-
-        for (Route route : routes) {
-            this.cancelRoute(route.getId(), toBeBlocked.getUsername());
-        }
-        for (RouteStop routeStop : routeStops) {
-            Route route = this.routeRepository.findById(routeStop.getRouteId()).orElse(null);
-            if (route.getDateRoute().compareTo(LocalDateTime.now()) > 0) {
-                deleteRouteStopById(routeStop.getId(), toBeBlocked.getUsername());
-            }
-        }
-        return this.userRepository.save(toBeBlocked);
     }
 
     @Override
     public User unblockUser(String userId, String username) {
-        User user = this.userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
+        validateUnblockUser(userId, user);
 
+        User toBeBlocked = userRepository.findById(userId).orElse(null);
+        if (toBeBlocked != null) {
+            toBeBlocked.setBlocked(false);
+            return userRepository.save(toBeBlocked);
+        } else {
+            throw new IllegalArgumentException("Something went wrong.");
+        }
+    }
+
+    private void validateUnblockUser(String userId, User user) {
         if (!user.getCompany()) {
             throw new IllegalArgumentException("You have no rights to unblock the user");
         } else if (user.getId().equals(userId)) {
             throw new IllegalArgumentException("You can not unblock yourself");
         }
-
-        User toBeBlocked = this.userRepository.findById(userId).orElse(null);
-        toBeBlocked.setBlocked(false);
-        return this.userRepository.save(toBeBlocked);
     }
 
     private Route cancelRoute(String routeId, String driverName) {
-        Route routeToCancel = this.routeRepository.findById(routeId).orElse(null);
-        User driver = this.userRepository.findByUsername(driverName);
+        Route routeToCancel = routeRepository.findById(routeId).orElse(null);
+        User driver = userRepository.findByUsername(driverName);
 
         if (routeToCancel != null) {
-            if (!routeToCancel.getCar().getUserId().equals(driver.getId())) {
-                throw new IllegalArgumentException("This route is not present in your profile");
-            }
+            validateCancelRoute(routeToCancel, driver);
 
             routeToCancel.setCanceled(true);
-            Route savedRoute = this.routeRepository.save(routeToCancel);
+            Route savedRoute = routeRepository.save(routeToCancel);
 
-            this.emailService.sendEmailsForCanceledRoute(routeId, driverName);
+            emailService.sendEmailsForCanceledRoute(routeId, driverName);
             return savedRoute;
         } else {
             throw new IllegalArgumentException("Something went wrong. Try again later");
+        }
+    }
+
+    private void validateCancelRoute(Route routeToCancel, User driver) {
+        if (!routeToCancel.getCar().getUserId().equals(driver.getId())) {
+            throw new IllegalArgumentException("This route is not present in your profile");
         }
     }
 

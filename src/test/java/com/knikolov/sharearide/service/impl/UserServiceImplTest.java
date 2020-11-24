@@ -6,7 +6,6 @@ import com.knikolov.sharearide.dto.PasswordChange;
 import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
-import com.knikolov.sharearide.service.EmailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
@@ -76,7 +75,7 @@ class UserServiceImplTest {
         when(userRepository.save(any())).thenReturn(user);
 
         // when
-        User returned = userService.updateUser(userService.userToUserDto(user));
+        User returned = userService.update(userService.userToUserDto(user));
 
         // then
         assertEquals("userId", returned.getId());
@@ -122,7 +121,7 @@ class UserServiceImplTest {
         when(userRepository.save(any())).thenReturn(any());
 
         // when
-        Address returned = userService.addNewAddress(addressDto, "username");
+        Address returned = userService.createAddress(addressDto, "username");
 
         // then
         assertEquals(addressDto.getDistrict(), returned.getDistrict());

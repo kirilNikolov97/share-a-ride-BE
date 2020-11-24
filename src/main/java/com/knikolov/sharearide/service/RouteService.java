@@ -8,6 +8,9 @@ import com.knikolov.sharearide.models.RouteStop;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Service interface for Route actions
+ */
 public interface RouteService {
 
     List<Route> getAllPastNotCanceledRoutesWhereUserIsDriver(String username, SortBy sortByEnum);

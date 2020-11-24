@@ -2,6 +2,9 @@ package com.knikolov.sharearide.payload;
 
 import java.util.List;
 
+/**
+ * Class that represents JWT response
+ */
 public class JwtResponse {
     private String token;
     private String type = "Bearer";

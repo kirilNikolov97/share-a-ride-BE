@@ -4,7 +4,7 @@ import com.knikolov.sharearide.dto.TopUser;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.Route;
 import com.knikolov.sharearide.models.RouteStop;
-import com.knikolov.sharearide.service.EmailService;
+import com.knikolov.sharearide.service.impl.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import org.springframework.web.bind.annotation.*;
 

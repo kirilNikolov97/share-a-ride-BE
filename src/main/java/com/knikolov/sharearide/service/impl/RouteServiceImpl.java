@@ -5,7 +5,6 @@ import com.knikolov.sharearide.enums.PassengerEnum;
 import com.knikolov.sharearide.enums.SortBy;
 import com.knikolov.sharearide.models.*;
 import com.knikolov.sharearide.repository.*;
-import com.knikolov.sharearide.service.EmailService;
 import com.knikolov.sharearide.service.RouteService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

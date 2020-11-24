@@ -5,6 +5,9 @@ import com.knikolov.sharearide.models.Car;
 
 import java.util.List;
 
+/**
+ * Service interface for Car actions
+ */
 public interface CarService {
 
     List<Car> getAllByUsername(String username);

@@ -1,6 +1,8 @@
 package com.knikolov.sharearide.dto;
 
-
+/**
+ * DTO for Address entity
+ */
 public class AddressDto {
 
     private String id;
@@ -10,8 +12,7 @@ public class AddressDto {
     private Double latitude;
     private Double longitude;
 
-    public AddressDto() {
-    }
+    public AddressDto() {}
 
     public AddressDto(String id, String district, String street, String additionalInfo,
                       Double latitude, Double longitude) {

@@ -63,7 +63,7 @@ class ProfileControllerTest {
     @Test
     void whenGetUser_thenReturns200() throws Exception {
         // given
-        when(userService.getUserByUsername(any())).thenReturn(user);
+        when(userService.getByUsername(any())).thenReturn(user);
         when(userService.userToUserDto(any())).thenReturn(userDto);
 
         // when
@@ -83,7 +83,7 @@ class ProfileControllerTest {
     @Test
     void whenUpdateUser_thenThrowUnauthorizedRequest() throws Exception {
         // given
-        when(userService.updateUser(any())).thenReturn(user);
+        when(userService.update(any())).thenReturn(user);
         when(userService.userToUserDto(any())).thenReturn(userDto);
 
         // when
@@ -97,7 +97,7 @@ class ProfileControllerTest {
     @Test
     void whenUpdateUser_thenReturns200() throws Exception {
         // given
-        when(userService.updateUser(any())).thenReturn(user);
+        when(userService.update(any())).thenReturn(user);
         when(userService.userToUserDto(any())).thenReturn(userDto);
 
         // when
@@ -328,7 +328,7 @@ class ProfileControllerTest {
     @Test
     void whenGetUserById_thenReturns200() throws Exception {
         // given
-        when(userService.getUserById("userId")).thenReturn(user);
+        when(userService.getById("userId")).thenReturn(user);
         when(userService.userToUserDto(any())).thenReturn(userDto);
 
         // when
@@ -348,7 +348,7 @@ class ProfileControllerTest {
     @Test
     void whenRateUser_thenReturns200() throws Exception {
         // given
-        when(userService.getUserByUsername("user")).thenReturn(user);
+        when(userService.getByUsername("user")).thenReturn(user);
         when(userService.rateUser(any(), any(), any())).thenReturn(rating);
 
         // when
@@ -387,7 +387,7 @@ class ProfileControllerTest {
     @Test
     void whenSearchNotBlockedUsers_thenReturns200() throws Exception {
         // given
-        when(userService.searchNotBlockedByUsername("user")).thenReturn(new ArrayList<UserDto>() {{ add(userDto); }});
+        when(userService.searchNonBlockedByUsername("user")).thenReturn(new ArrayList<UserDto>() {{ add(userDto); }});
 
         // when
         MvcResult mvcResult = mockMvc

@@ -2,6 +2,9 @@ package com.knikolov.sharearide.payload;
 
 import javax.validation.constraints.NotBlank;
 
+/**
+ * Class that represents Login request
+ */
 public class LoginRequest {
 
     @NotBlank

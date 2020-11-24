@@ -1,5 +1,8 @@
 package com.knikolov.sharearide.dto;
 
+/**
+ * DTO for Car entity
+ */
 public class CarDto {
 
     private String id;

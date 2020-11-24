@@ -1,5 +1,8 @@
 package com.knikolov.sharearide.dto;
 
+/**
+ * DTO used when user wants to change password
+ */
 public class PasswordChange {
 
     private String oldPassword;
